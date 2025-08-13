@@ -1,8 +1,8 @@
 # Use the official Node.js 20 image.
 FROM node:20-slim
 
-# Install openssl
-RUN apt-get update && apt-get install -y openssl
+# Install OpenSSL and PostgreSQL client tools
+RUN apt-get update -y && apt-get install -y openssl postgresql-client && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory in the container.
 WORKDIR /app
@@ -16,6 +16,9 @@ COPY prisma ./prisma
 # Install dependencies.
 RUN npm install
 
+# Generate Prisma client
+RUN npx prisma generate
+
 # Copy the rest of the application code to the working directory.
 COPY . .
 
@@ -25,5 +28,31 @@ RUN npm run build
 # Expose the port the app runs on.
 EXPOSE 9002
 
+# Create a startup script
+COPY <<EOF /app/start.sh
+#!/bin/bash
+set -e
+
+echo "Waiting for database to be ready..."
+until pg_isready -h db -p 5432 -U postgres 2>/dev/null; do
+  echo "Database is unavailable - sleeping"
+  sleep 2
+done
+
+echo "Database is ready - running migrations..."
+npx prisma migrate deploy || {
+  echo "Migration failed, trying to baseline and deploy..."
+  npx prisma migrate resolve --applied "20250711152613_add_user_model"
+  npx prisma migrate resolve --applied "20250713033745_add_room_model_and_last_payment"
+  npx prisma migrate resolve --applied "20250720103330_add_user_relations"
+  npx prisma migrate deploy
+}
+
+echo "Starting application..."
+npm start
+EOF
+
+RUN chmod +x /app/start.sh
+
 # Define the command to start the app.
-CMD ["npm", "start"]
+CMD ["/app/start.sh"]

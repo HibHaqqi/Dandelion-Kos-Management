@@ -10,6 +10,8 @@ services:
       - .env
     depends_on:
       - db
+    networks:
+      - default
 
   db:
     container_name: bizkos-db
@@ -19,10 +21,13 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
+    networks:
+      - default
 networks:
-  - default
+  gitea-net:
+    external: true
 volumes:
   pgdata:
-networks:
-  default:
+
+
