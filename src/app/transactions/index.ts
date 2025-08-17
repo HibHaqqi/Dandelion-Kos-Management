@@ -10,5 +10,6 @@ export async function getRoomsData(): Promise<Room[]> {
 }
 
 export async function getCategoriesData(): Promise<Category[]> {
-    return await getCategories();
+    const categories = await getCategories();
+    return categories as Category[];
 }

@@ -119,7 +119,7 @@ export function TransactionsView({ transactions, rooms, categories }: { transact
                 <CardDescription>All incoming revenue transactions.</CardDescription>
               </CardHeader>
               <CardContent>
-                <TransactionsTable transactions={revenue} rooms={safeRooms} />
+                <TransactionsTable transactions={revenue} rooms={safeRooms} categories={safeCategories} />
               </CardContent>
             </Card>
           </TabsContent>
@@ -130,7 +130,7 @@ export function TransactionsView({ transactions, rooms, categories }: { transact
                 <CardDescription>All outgoing expense transactions.</CardDescription>
               </CardHeader>
               <CardContent>
-                <TransactionsTable transactions={expenses} rooms={safeRooms} />
+                <TransactionsTable transactions={expenses} rooms={safeRooms} categories={safeCategories} />
               </CardContent>
             </Card>
           </TabsContent>

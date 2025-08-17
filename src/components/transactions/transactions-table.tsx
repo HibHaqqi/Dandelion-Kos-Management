@@ -1,6 +1,6 @@
 "use client";
 
-import type { Transaction } from '@/types';
+import type { Transaction, Room, Category } from '@/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -12,7 +12,7 @@ import { deleteTransaction } from '@/app/transactions/actions';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../ui/alert-dialog';
 
-export function TransactionsTable({ transactions, rooms }: { transactions: Transaction[], rooms: Room[] }) {
+export function TransactionsTable({ transactions, rooms, categories = [] }: { transactions: Transaction[], rooms: Room[], categories?: Category[] }) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -92,6 +92,7 @@ export function TransactionsTable({ transactions, rooms }: { transactions: Trans
         onOpenChange={setIsFormOpen}
         transaction={selectedTransaction}
         rooms={rooms}
+        categories={categories}
       />
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
         <AlertDialogContent>

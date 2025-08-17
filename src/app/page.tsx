@@ -1,4 +1,10 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { StatCard } from '@/components/dashboard/stat-card';
+import { DateFilter, type DateFilterValue } from '@/components/dashboard/date-filter';
+import { IncomeVsExpenseChart } from '@/components/dashboard/income-vs-expense-chart';
+import { ExpenseCategoryChart } from '@/components/dashboard/expense-category-chart';
 import { DollarSign, Users, TrendingUp, TrendingDown } from 'lucide-react';
 import {
   Card,
@@ -18,9 +24,62 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/layout/page-header';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { getDashboardData } from './dashboard.logic';
 
-export default async function DashboardPage() {
+type DashboardData = {
+  totalRevenue: number;
+  totalExpenses: number;
+  occupiedRooms: number;
+  totalRooms: number;
+  occupancyRate: number;
+  recentTransactions: any[];
+  recentCustomers: any[];
+  customersCount: number;
+  incomeVsExpenseData: any[];
+  expenseCategoryData: any[];
+};
+
+export default function DashboardPage() {
+  const [dateFilter, setDateFilter] = useState<DateFilterValue>({ type: 'all' });
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch('/api/dashboard', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ dateFilter }),
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setDashboardData(data);
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [dateFilter]);
+
+  if (loading || !dashboardData) {
+    return (
+      <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+        <PageHeader title="Dashboard" />
+        <div className="flex items-center justify-center h-64">
+          <div className="text-muted-foreground">Loading dashboard data...</div>
+        </div>
+      </div>
+    );
+  }
+
   const {
     totalRevenue,
     totalExpenses,
@@ -30,30 +89,52 @@ export default async function DashboardPage() {
     recentTransactions,
     recentCustomers,
     customersCount,
-  } = await getDashboardData();
+    incomeVsExpenseData,
+    expenseCategoryData,
+  } = dashboardData;
+
+  const getFilterDescription = () => {
+    switch (dateFilter.type) {
+      case 'all':
+        return 'All time';
+      case 'monthly':
+        const months = ["January", "February", "March", "April", "May", "June",
+          "July", "August", "September", "October", "November", "December"];
+        return `${months[dateFilter.month || 0]} ${dateFilter.year || new Date().getFullYear()}`;
+      case 'yearly':
+        return `Year ${dateFilter.year || new Date().getFullYear()}`;
+      case 'custom':
+        return 'Custom period';
+      default:
+        return 'All time';
+    }
+  };
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
-      <PageHeader title="Dashboard" />
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <PageHeader title="Dashboard" />
+        <DateFilter value={dateFilter} onChange={setDateFilter} />
+      </div>
+      
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Revenue"
           value={`IDR ${totalRevenue.toLocaleString()}`}
           icon={DollarSign}
-          description="All time revenue"
+          description={`${getFilterDescription()} revenue`}
         />
         <StatCard
           title="Total Expenses"
           value={`IDR ${totalExpenses.toLocaleString()}`}
           icon={TrendingDown}
-          description="All time expenses"
+          description={`${getFilterDescription()} expenses`}
         />
         <StatCard
           title="Net Result"
           value={`IDR ${(totalRevenue - totalExpenses).toLocaleString()}`}
           icon={TrendingUp}
           description="Revenue - Expenses"
-      
         />
         <StatCard
           title="Active Customers"
@@ -68,12 +149,19 @@ export default async function DashboardPage() {
           description={`${occupiedRooms} of ${totalRooms} rooms`}
         />
       </div>
+
+      {/* New Charts Section */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <IncomeVsExpenseChart data={incomeVsExpenseData} />
+        <ExpenseCategoryChart data={expenseCategoryData} />
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="lg:col-span-4">
           <CardHeader>
             <CardTitle>Recent Transactions</CardTitle>
             <CardDescription>
-              A list of the 5 most recent transactions.
+              Recent transactions for {getFilterDescription().toLowerCase()}.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -86,27 +174,35 @@ export default async function DashboardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recentTransactions.map((transaction) => (
-                  <TableRow key={transaction.id}>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          transaction.type === 'revenue'
-                            ? 'secondary'
-                            : 'destructive'
-                        }
-                      >
-                        {transaction.type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {transaction.description}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      IDR {transaction.amount.toLocaleString()}
+                {recentTransactions.length > 0 ? (
+                  recentTransactions.map((transaction) => (
+                    <TableRow key={transaction.id}>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            transaction.type === 'revenue'
+                              ? 'secondary'
+                              : 'destructive'
+                          }
+                        >
+                          {transaction.type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {transaction.description}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        IDR {transaction.amount.toLocaleString()}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center text-muted-foreground">
+                      No transactions found for the selected period
                     </TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </CardContent>
@@ -118,26 +214,32 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentCustomers.map((customer) => (
-                <div key={customer.id} className="flex items-center">
-                  <Avatar className="h-9 w-9">
-                    <AvatarFallback>
-                      {customer.name.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="ml-4 space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {customer.name}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {customer.phone}
-                    </p>
+              {recentCustomers.length > 0 ? (
+                recentCustomers.map((customer) => (
+                  <div key={customer.id} className="flex items-center">
+                    <Avatar className="h-9 w-9">
+                      <AvatarFallback>
+                        {customer.name.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="ml-4 space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {customer.name}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {customer.phone}
+                      </p>
+                    </div>
+                    <div className="ml-auto font-medium">
+                      Room {customer.roomNumber || 'N/A'}
+                    </div>
                   </div>
-                  <div className="ml-auto font-medium">
-                    Room {customer.roomNumber || 'N/A'}
-                  </div>
+                ))
+              ) : (
+                <div className="text-center text-muted-foreground">
+                  No customers found
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>
