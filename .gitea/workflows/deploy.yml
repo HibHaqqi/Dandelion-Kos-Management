@@ -1,0 +1,23 @@
+name: Simple Auto Deploy
+
+on:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Deploy to VPS
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USERNAME }}
+        password: ${{ secrets.VPS_PASSWORD }}
+        port: ${{ secrets.VPS_PORT || 22 }}
+        script: |
+          cd ${{ secrets.PROJECT_PATH || '/home/haqqi09/biztrackkos-2' }}
+          git pull
+          docker-compose down
+          docker-compose up -d --build
