@@ -6,7 +6,8 @@ export async function createSession(userId: string) {
   const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
   const session = { userId, expires };
 
-  cookies().set('session', JSON.stringify(session), {
+  const cookieStore = await cookies();
+  cookieStore.set('session', JSON.stringify(session), {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     expires,
@@ -15,7 +16,8 @@ export async function createSession(userId: string) {
 }
 
 export async function getSession() {
-  const sessionCookie = cookies().get('session')?.value;
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get('session')?.value;
   if (!sessionCookie) return null;
   return JSON.parse(sessionCookie);
 }

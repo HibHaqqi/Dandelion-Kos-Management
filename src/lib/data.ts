@@ -38,6 +38,41 @@ export async function getTransactions() {
   }));
 }
 
+export async function getCategories() {
+  const session = await getSession();
+  if (!session?.userId) {
+    return [];
+  }
+  const categories = await prisma.category.findMany({
+    where: { userId: session.userId },
+    orderBy: { name: 'asc' },
+  });
+  return categories.map((category) => ({
+    ...category,
+    createdAt: format(new Date(category.createdAt), 'yyyy-MM-dd'),
+    updatedAt: format(new Date(category.updatedAt), 'yyyy-MM-dd'),
+  }));
+}
+
+export async function getCategoriesByType(type: 'expense' | 'revenue') {
+  const session = await getSession();
+  if (!session?.userId) {
+    return [];
+  }
+  const categories = await prisma.category.findMany({
+    where: {
+      userId: session.userId,
+      type: type,
+    },
+    orderBy: { name: 'asc' },
+  });
+  return categories.map((category) => ({
+    ...category,
+    createdAt: format(new Date(category.createdAt), 'yyyy-MM-dd'),
+    updatedAt: format(new Date(category.updatedAt), 'yyyy-MM-dd'),
+  }));
+}
+
 export async function getRooms() {
   const session = await getSession();
   if (!session?.userId) {

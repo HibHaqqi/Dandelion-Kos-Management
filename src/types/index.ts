@@ -25,3 +25,11 @@ export type Transaction = {
   roomNumber?: string; 
   customerName?: string;
 };
+
+export type Category = {
+  id: string;
+  name: string;
+  type: 'expense' | 'revenue';
+  createdAt: string;
+  updatedAt: string;
+};

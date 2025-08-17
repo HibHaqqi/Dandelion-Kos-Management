@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import type { Transaction, Room } from '@/types';
+import type { Transaction, Room, Category } from '@/types';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Download, Upload } from 'lucide-react';
 import { PageHeader } from '@/components/layout/page-header';
@@ -12,7 +12,7 @@ import { TransactionFormDialog } from './transaction-form-dialog';
 import { ImportDialog } from './import-dialog';
 import { useToast } from '@/hooks/use-toast';
 
-export function TransactionsView({ transactions, rooms }: { transactions: Transaction[], rooms: Room[] }) {
+export function TransactionsView({ transactions, rooms, categories }: { transactions: Transaction[], rooms: Room[], categories: Category[] }) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -66,6 +66,7 @@ export function TransactionsView({ transactions, rooms }: { transactions: Transa
         isOpen={isFormOpen}
         onOpenChange={setIsFormOpen}
         rooms={rooms}
+        categories={categories}
       />
       <ImportDialog
         isOpen={isImportOpen}

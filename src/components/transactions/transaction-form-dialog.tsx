@@ -9,11 +9,13 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useEffect, useTransition } from "react";
+import { useEffect, useTransition, useState } from "react";
 import { addTransaction, updateTransaction } from "@/app/transactions/actions";
+import { addCategory } from "@/app/categories/actions";
 import { useToast } from "@/hooks/use-toast";
-import type { Room } from "@/types";
+import type { Room, Category } from "@/types";
 import type { Transaction } from "@/types";
+import { Plus } from "lucide-react";
 
 const formSchema = z.object({
   type: z.enum(["revenue", "expense"]),
@@ -46,12 +48,13 @@ type TransactionFormDialogProps = {
   onOpenChange: (isOpen: boolean) => void;
   transaction?: Transaction | null;
   rooms: Room[];
+  categories: Category[];
 };
 
-const expenseCategories = ["Maintenance", "Utilities", "Capital", "Marketing", "Salaries"];
-
-export function TransactionFormDialog({ isOpen, onOpenChange, transaction, rooms }: TransactionFormDialogProps) {
+export function TransactionFormDialog({ isOpen, onOpenChange, transaction, rooms, categories }: TransactionFormDialogProps) {
   const [isPending, startTransition] = useTransition();
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
@@ -103,6 +106,26 @@ export function TransactionFormDialog({ isOpen, onOpenChange, transaction, rooms
       }
     });
   };
+
+  const handleAddCategory = async () => {
+    if (!newCategoryName.trim()) return;
+    
+    try {
+      await addCategory({
+        name: newCategoryName.trim(),
+        type: transactionType as 'expense' | 'revenue',
+      });
+      toast({ title: "Success", description: "Category added successfully." });
+      setNewCategoryName("");
+      setIsAddingCategory(false);
+      // The parent component should refetch categories
+    } catch (error) {
+      toast({ variant: "destructive", title: "Error", description: "Failed to add category." });
+    }
+  };
+
+  // Filter categories by transaction type
+  const filteredCategories = categories.filter(cat => cat.type === transactionType);
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -200,16 +223,70 @@ export function TransactionFormDialog({ isOpen, onOpenChange, transaction, rooms
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value ?? ''}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {expenseCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
+                    <div className="space-y-2">
+                      <Select onValueChange={field.onChange} value={field.value ?? ''}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a category" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {filteredCategories.map(cat => (
+                            <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      
+                      {!isAddingCategory ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsAddingCategory(true)}
+                          className="w-full"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add New Category
+                        </Button>
+                      ) : (
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Category name"
+                            value={newCategoryName}
+                            onChange={(e) => setNewCategoryName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleAddCategory();
+                              }
+                              if (e.key === 'Escape') {
+                                setIsAddingCategory(false);
+                                setNewCategoryName("");
+                              }
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={handleAddCategory}
+                            disabled={!newCategoryName.trim()}
+                          >
+                            Add
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setIsAddingCategory(false);
+                              setNewCategoryName("");
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
