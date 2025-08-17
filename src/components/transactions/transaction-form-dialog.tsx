@@ -125,7 +125,7 @@ export function TransactionFormDialog({ isOpen, onOpenChange, transaction, rooms
   };
 
   // Filter categories by transaction type
-  const filteredCategories = categories.filter(cat => cat.type === transactionType);
+  const filteredCategories = (categories || []).filter(cat => cat.type === transactionType);
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -207,7 +207,7 @@ export function TransactionFormDialog({ isOpen, onOpenChange, transaction, rooms
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {rooms && rooms.map(room => <SelectItem key={room.id} value={room.roomNumber}>{room.roomNumber}</SelectItem>)}
+                        {(rooms || []).map(room => <SelectItem key={room.id} value={room.roomNumber}>{room.roomNumber}</SelectItem>)}
                       </SelectContent>
                     </Select>
                     <FormMessage />
