@@ -18,8 +18,13 @@ export function TransactionsView({ transactions, rooms, categories }: { transact
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
 
-  const revenue = transactions.filter(t => t.type === 'revenue');
-  const expenses = transactions.filter(t => t.type === 'expense');
+  // Add null checks to prevent filter errors
+  const safeTransactions = transactions || [];
+  const safeRooms = rooms || [];
+  const safeCategories = categories || [];
+
+  const revenue = safeTransactions.filter(t => t.type === 'revenue');
+  const expenses = safeTransactions.filter(t => t.type === 'expense');
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -65,8 +70,8 @@ export function TransactionsView({ transactions, rooms, categories }: { transact
       <TransactionFormDialog
         isOpen={isFormOpen}
         onOpenChange={setIsFormOpen}
-        rooms={rooms}
-        categories={categories}
+        rooms={safeRooms}
+        categories={safeCategories}
       />
       <ImportDialog
         isOpen={isImportOpen}
@@ -114,7 +119,7 @@ export function TransactionsView({ transactions, rooms, categories }: { transact
                 <CardDescription>All incoming revenue transactions.</CardDescription>
               </CardHeader>
               <CardContent>
-                <TransactionsTable transactions={revenue} rooms={rooms} />
+                <TransactionsTable transactions={revenue} rooms={safeRooms} />
               </CardContent>
             </Card>
           </TabsContent>
@@ -125,7 +130,7 @@ export function TransactionsView({ transactions, rooms, categories }: { transact
                 <CardDescription>All outgoing expense transactions.</CardDescription>
               </CardHeader>
               <CardContent>
-                <TransactionsTable transactions={expenses} rooms={rooms} />
+                <TransactionsTable transactions={expenses} rooms={safeRooms} />
               </CardContent>
             </Card>
           </TabsContent>

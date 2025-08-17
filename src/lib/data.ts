@@ -18,40 +18,50 @@ export async function getCustomers() {
 }
 
 export async function getTransactions() {
-  const session = await getSession();
-  if (!session?.userId) {
+  try {
+    const session = await getSession();
+    if (!session?.userId) {
+      return [];
+    }
+    const transactions = await prisma.transaction.findMany({
+      where: { userId: session.userId },
+      orderBy: {
+        date: 'desc',
+      },
+    });
+    return transactions.map((transaction) => ({
+      ...transaction,
+      date: format(new Date(transaction.date), 'yyyy-MM-dd'),
+      type: transaction.type as 'revenue' | 'expense',
+      category: transaction.category ?? undefined,
+      roomNumber: transaction.roomNumber ?? undefined,
+      customerName: transaction.customerName ?? undefined,
+    }));
+  } catch (error) {
+    console.error('Error fetching transactions:', error);
     return [];
   }
-  const transactions = await prisma.transaction.findMany({
-    where: { userId: session.userId },
-    orderBy: {
-      date: 'desc',
-    },
-  });
-  return transactions.map((transaction) => ({
-    ...transaction,
-    date: format(new Date(transaction.date), 'yyyy-MM-dd'),
-    type: transaction.type as 'revenue' | 'expense',
-    category: transaction.category ?? undefined,
-    roomNumber: transaction.roomNumber ?? undefined,
-    customerName: transaction.customerName ?? undefined,
-  }));
 }
 
 export async function getCategories() {
-  const session = await getSession();
-  if (!session?.userId) {
+  try {
+    const session = await getSession();
+    if (!session?.userId) {
+      return [];
+    }
+    const categories = await prisma.category.findMany({
+      where: { userId: session.userId },
+      orderBy: { name: 'asc' },
+    });
+    return categories.map((category) => ({
+      ...category,
+      createdAt: format(new Date(category.createdAt), 'yyyy-MM-dd'),
+      updatedAt: format(new Date(category.updatedAt), 'yyyy-MM-dd'),
+    }));
+  } catch (error) {
+    console.error('Error fetching categories:', error);
     return [];
   }
-  const categories = await prisma.category.findMany({
-    where: { userId: session.userId },
-    orderBy: { name: 'asc' },
-  });
-  return categories.map((category) => ({
-    ...category,
-    createdAt: format(new Date(category.createdAt), 'yyyy-MM-dd'),
-    updatedAt: format(new Date(category.updatedAt), 'yyyy-MM-dd'),
-  }));
 }
 
 export async function getCategoriesByType(type: 'expense' | 'revenue') {
@@ -74,17 +84,22 @@ export async function getCategoriesByType(type: 'expense' | 'revenue') {
 }
 
 export async function getRooms() {
-  const session = await getSession();
-  if (!session?.userId) {
+  try {
+    const session = await getSession();
+    if (!session?.userId) {
+      return [];
+    }
+    const rooms = await prisma.room.findMany({
+      where: { userId: session.userId },
+    });
+    return rooms.map((room) => ({
+      ...room,
+      lastPayment: room.lastPayment
+        ? format(new Date(room.lastPayment), 'yyyy-MM-dd')
+        : null,
+    }));
+  } catch (error) {
+    console.error('Error fetching rooms:', error);
     return [];
   }
-  const rooms = await prisma.room.findMany({
-    where: { userId: session.userId },
-  });
-  return rooms.map((room) => ({
-    ...room,
-    lastPayment: room.lastPayment
-      ? format(new Date(room.lastPayment), 'yyyy-MM-dd')
-      : null,
-  }));
 }
