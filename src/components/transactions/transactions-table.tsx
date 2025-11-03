@@ -196,3 +196,4 @@ export function TransactionsTable({ transactions, rooms, categories = [] }: { tr
       </AlertDialog>
     </>
   );
+}
