@@ -11,6 +11,8 @@ import { PageHeader } from "@/components/layout/page-header";
 import { CustomerFormDialog } from "./customer-form-dialog";
 import { deleteCustomer } from "@/app/customers/actions";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,6 +61,7 @@ export function CustomerList({ customers }: { customers: Customer[] }) {
   const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const openFormForEdit = (customer: Customer) => {
     setSelectedCustomer(customer);
@@ -123,54 +126,114 @@ export function CustomerList({ customers }: { customers: Customer[] }) {
             </Button>
           }
         />
-        <Card>
-          <CardHeader>
-            <CardTitle>Customer Management</CardTitle>
-            <CardDescription>View, edit, or delete existing customer entries.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Entry Date</TableHead>
-                  <TableHead>Last Payment</TableHead>
-                  <TableHead>Months Occupied</TableHead>
-                  <TableHead>Room</TableHead>
-                  <TableHead><span className="sr-only">Actions</span></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {customers.map((customer) => (
-                  <TableRow key={customer.id}>
-                    <TableCell className="font-medium">{customer.name}</TableCell>
-                    <TableCell>{customer.phone}</TableCell>
-                    <TableCell>{customer.entryDate}</TableCell>
-                    <TableCell>{customer.lastPaymentDate || 'N/A'}</TableCell>
-                    <TableCell><MonthsOccupied entryDate={customer.entryDate} /></TableCell>
-                    <TableCell>{customer.roomNumber || 'N/A'}</TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => openFormForEdit(customer)}>Edit</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => confirmDelete(customer.id)}>Delete</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        {isMobile ? (
+          // Mobile card view
+          <div className="space-y-4">
+            {customers.map((customer) => (
+              <Card key={customer.id} className="relative">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg">{customer.name}</h3>
+                      <p className="text-sm text-muted-foreground">{customer.phone}</p>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Open menu</span>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => openFormForEdit(customer)}>Edit</DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => confirmDelete(customer.id)}>Delete</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">Entry Date</span>
+                      <span>{customer.entryDate}</span>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">Last Payment</span>
+                      <span>{customer.lastPaymentDate || 'N/A'}</span>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">Months Occupied</span>
+                      <Badge variant="outline">
+                        <MonthsOccupied entryDate={customer.entryDate} /> months
+                      </Badge>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">Room</span>
+                      <Badge variant={customer.roomNumber ? "default" : "secondary"}>
+                        {customer.roomNumber || 'N/A'}
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          // Desktop table view
+          <Card>
+            <CardHeader>
+              <CardTitle>Customer Management</CardTitle>
+              <CardDescription>View, edit, or delete existing customer entries.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Phone</TableHead>
+                      <TableHead>Entry Date</TableHead>
+                      <TableHead>Last Payment</TableHead>
+                      <TableHead>Months Occupied</TableHead>
+                      <TableHead>Room</TableHead>
+                      <TableHead><span className="sr-only">Actions</span></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {customers.map((customer) => (
+                      <TableRow key={customer.id}>
+                        <TableCell className="font-medium">{customer.name}</TableCell>
+                        <TableCell>{customer.phone}</TableCell>
+                        <TableCell>{customer.entryDate}</TableCell>
+                        <TableCell>{customer.lastPaymentDate || 'N/A'}</TableCell>
+                        <TableCell><MonthsOccupied entryDate={customer.entryDate} /></TableCell>
+                        <TableCell>{customer.roomNumber || 'N/A'}</TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => openFormForEdit(customer)}>Edit</DropdownMenuItem>
+                              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => confirmDelete(customer.id)}>Delete</DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </>
   );

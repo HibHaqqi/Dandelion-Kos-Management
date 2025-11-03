@@ -11,6 +11,8 @@ import { TransactionFormDialog } from './transaction-form-dialog';
 import { deleteTransaction } from '@/app/transactions/actions';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../ui/alert-dialog';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Card, CardContent } from '@/components/ui/card';
 
 export function TransactionsTable({ transactions, rooms, categories = [] }: { transactions: Transaction[], rooms: Room[], categories?: Category[] }) {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -18,6 +20,7 @@ export function TransactionsTable({ transactions, rooms, categories = [] }: { tr
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const handleEdit = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
@@ -50,43 +53,124 @@ export function TransactionsTable({ transactions, rooms, categories = [] }: { tr
   
   const isRevenue = transactions[0]?.type === 'revenue';
 
+  // Mobile card view
+  if (isMobile) {
+    return (
+      <>
+        <div className="space-y-4">
+          {transactions.map(transaction => (
+            <Card key={transaction.id} className="relative">
+              <CardContent className="p-4">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex-1">
+                    <p className="font-semibold text-lg">{transaction.description}</p>
+                    <p className="text-sm text-muted-foreground">{transaction.date}</p>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Open menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleEdit(transaction)}>Edit</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDelete(transaction)} className="text-red-600">Delete</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">
+                      {isRevenue ? 'Room' : 'Category'}
+                    </span>
+                    <span>
+                      {isRevenue ?
+                        transaction.roomNumber :
+                        <Badge variant="outline">{transaction.category}</Badge>
+                      }
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Amount</span>
+                    <span className="font-semibold text-green-600">
+                      IDR {transaction.amount.toLocaleString('id-ID')}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+          </div>
+        <TransactionFormDialog
+          isOpen={isFormOpen}
+          onOpenChange={setIsFormOpen}
+          transaction={selectedTransaction}
+          rooms={rooms}
+          categories={categories}
+        />
+        <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the transaction.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDelete} disabled={isPending}>
+                {isPending ? "Deleting..." : "Delete"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </>
+    );
+  }
+
+  // Desktop table view
   return (
     <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>Description</TableHead>
-            {isRevenue ? <TableHead>Room</TableHead> : <TableHead>Category</TableHead>}
-            <TableHead className="text-right">Amount</TableHead>
-            <TableHead className="w-[50px]"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {transactions.map(transaction => (
-            <TableRow key={transaction.id}>
-              <TableCell>{transaction.date}</TableCell>
-              <TableCell className="font-medium">{transaction.description}</TableCell>
-              {isRevenue ? <TableCell>{transaction.roomNumber}</TableCell> : <TableCell><Badge variant="outline">{transaction.category}</Badge></TableCell>}
-              <TableCell className="text-right">IDR {transaction.amount.toLocaleString('id-ID')}</TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                      <span className="sr-only">Open menu</span>
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleEdit(transaction)}>Edit</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleDelete(transaction)} className="text-red-600">Delete</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
+      <div className="rounded-md border overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Description</TableHead>
+              {isRevenue ? <TableHead>Room</TableHead> : <TableHead>Category</TableHead>}
+              <TableHead className="text-right">Amount</TableHead>
+              <TableHead className="w-[70px]"></TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {transactions.map(transaction => (
+              <TableRow key={transaction.id}>
+                <TableCell>{transaction.date}</TableCell>
+                <TableCell className="font-medium">{transaction.description}</TableCell>
+                {isRevenue ? <TableCell>{transaction.roomNumber}</TableCell> : <TableCell><Badge variant="outline">{transaction.category}</Badge></TableCell>}
+                <TableCell className="text-right">IDR {transaction.amount.toLocaleString('id-ID')}</TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Open menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleEdit(transaction)}>Edit</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDelete(transaction)} className="text-red-600">Delete</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
       <TransactionFormDialog
         isOpen={isFormOpen}
         onOpenChange={setIsFormOpen}
@@ -112,4 +196,3 @@ export function TransactionsTable({ transactions, rooms, categories = [] }: { tr
       </AlertDialog>
     </>
   );
-}

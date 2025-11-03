@@ -5,6 +5,7 @@ import type { Transaction, Room, Category } from '@/types';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Download, Upload } from 'lucide-react';
 import { PageHeader } from '@/components/layout/page-header';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TransactionsTable } from './transactions-table';
@@ -17,6 +18,7 @@ export function TransactionsView({ transactions, rooms, categories }: { transact
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   // Add null checks to prevent filter errors
   const safeTransactions = transactions || [];
@@ -82,33 +84,33 @@ export function TransactionsView({ transactions, rooms, categories }: { transact
         <PageHeader
           title="Transactions"
           actions={
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={handleExport} disabled={isExporting}>
+            <div className={`flex gap-2 ${isMobile ? 'flex-col sm:flex-row' : ''}`}>
+              <Button variant="outline" onClick={handleExport} disabled={isExporting} size={isMobile ? "sm" : "default"}>
                 {isExporting ? (
                   <>
-                    <Download className="mr-2 h-4 w-4 animate-spin" />
-                    Exporting...
+                    <Download className={`${isMobile ? 'mr-1' : 'mr-2'} h-4 w-4 animate-spin`} />
+                    {!isMobile && 'Exporting...'}
                   </>
                 ) : (
                   <>
-                    <Download className="mr-2 h-4 w-4" />
-                    Export Excel
+                    <Download className={`${isMobile ? 'mr-1' : 'mr-2'} h-4 w-4`} />
+                    {!isMobile && 'Export Excel'}
                   </>
                 )}
               </Button>
-              <Button variant="outline" onClick={() => setIsImportOpen(true)}>
-                <Upload className="mr-2 h-4 w-4" />
-                Import Excel
+              <Button variant="outline" onClick={() => setIsImportOpen(true)} size={isMobile ? "sm" : "default"}>
+                <Upload className={`${isMobile ? 'mr-1' : 'mr-2'} h-4 w-4`} />
+                {!isMobile && 'Import Excel'}
               </Button>
-              <Button onClick={() => setIsFormOpen(true)}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Transaction
+              <Button onClick={() => setIsFormOpen(true)} size={isMobile ? "sm" : "default"}>
+                <PlusCircle className={`${isMobile ? 'mr-1' : 'mr-2'} h-4 w-4`} />
+                {!isMobile && 'Add Transaction'}
               </Button>
             </div>
           }
         />
         <Tabs defaultValue="revenue">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2' : 'grid-cols-2'} max-w-md`}>
             <TabsTrigger value="revenue">Revenue</TabsTrigger>
             <TabsTrigger value="expense">Expenses</TabsTrigger>
           </TabsList>

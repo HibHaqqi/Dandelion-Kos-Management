@@ -6,6 +6,7 @@ import { DateFilter, type DateFilterValue } from '@/components/dashboard/date-fi
 import { IncomeVsExpenseChart } from '@/components/dashboard/income-vs-expense-chart';
 import { ExpenseCategoryChart } from '@/components/dashboard/expense-category-chart';
 import { DollarSign, Users, TrendingUp, TrendingDown } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Card,
   CardContent,
@@ -42,6 +43,7 @@ export default function DashboardPage() {
   const [dateFilter, setDateFilter] = useState<DateFilterValue>({ type: 'all' });
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -117,7 +119,7 @@ export default function DashboardPage() {
         <DateFilter value={dateFilter} onChange={setDateFilter} />
       </div>
       
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard
           title="Total Revenue"
           value={`IDR ${totalRevenue.toLocaleString()}`}
@@ -150,14 +152,14 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* New Charts Section */}
-      <div className="grid gap-4 md:grid-cols-2">
+      {/* Charts Section */}
+      <div className="grid gap-4 lg:grid-cols-2">
         <IncomeVsExpenseChart data={incomeVsExpenseData} />
         <ExpenseCategoryChart data={expenseCategoryData} />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="lg:col-span-4">
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Recent Transactions</CardTitle>
             <CardDescription>
@@ -165,49 +167,87 @@ export default function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            {isMobile ? (
+              // Mobile card view for transactions
+              <div className="space-y-4">
                 {recentTransactions.length > 0 ? (
                   recentTransactions.map((transaction) => (
-                    <TableRow key={transaction.id}>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            transaction.type === 'revenue'
-                              ? 'secondary'
-                              : 'destructive'
-                          }
-                        >
-                          {transaction.type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {transaction.description}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        IDR {transaction.amount.toLocaleString()}
-                      </TableCell>
-                    </TableRow>
+                    <div key={transaction.id} className="flex justify-between items-start p-3 border rounded-lg">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge
+                            variant={
+                              transaction.type === 'revenue'
+                                ? 'secondary'
+                                : 'destructive'
+                            }
+                          >
+                            {transaction.type}
+                          </Badge>
+                        </div>
+                        <p className="font-medium text-sm">{transaction.description}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold">
+                          IDR {transaction.amount.toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
                   ))
                 ) : (
-                  <TableRow>
-                    <TableCell colSpan={3} className="text-center text-muted-foreground">
-                      No transactions found for the selected period
-                    </TableCell>
-                  </TableRow>
+                  <div className="text-center text-muted-foreground py-4">
+                    No transactions found for the selected period
+                  </div>
                 )}
-              </TableBody>
-            </Table>
+              </div>
+            ) : (
+              // Desktop table view
+              <div className="rounded-md border overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {recentTransactions.length > 0 ? (
+                      recentTransactions.map((transaction) => (
+                        <TableRow key={transaction.id}>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                transaction.type === 'revenue'
+                                  ? 'secondary'
+                                  : 'destructive'
+                              }
+                            >
+                              {transaction.type}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {transaction.description}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            IDR {transaction.amount.toLocaleString()}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-center text-muted-foreground">
+                          No transactions found for the selected period
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </CardContent>
         </Card>
-        <Card className="lg:col-span-3">
+        <Card>
           <CardHeader>
             <CardTitle>New Customers</CardTitle>
             <CardDescription>A list of the 5 newest customers.</CardDescription>
@@ -230,7 +270,7 @@ export default function DashboardPage() {
                         {customer.phone}
                       </p>
                     </div>
-                    <div className="ml-auto font-medium">
+                    <div className="ml-auto font-medium text-sm">
                       Room {customer.roomNumber || 'N/A'}
                     </div>
                   </div>
