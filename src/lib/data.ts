@@ -10,10 +10,30 @@ export async function getCustomers() {
   }
   const customers = await prisma.customer.findMany({
     where: { userId: session.userId },
+    include: {
+      Transaction: {
+        where: {
+          type: 'revenue',
+        },
+        orderBy: {
+          date: 'desc',
+        },
+        take: 1,
+      },
+    },
+    orderBy: {
+      entryDate: 'desc',
+    },
   });
   return customers.map((customer) => ({
     ...customer,
     entryDate: format(new Date(customer.entryDate), 'yyyy-MM-dd'),
+    checkoutDate: customer.checkoutDate ? format(new Date(customer.checkoutDate), 'yyyy-MM-dd') : null,
+    lastPaymentDate: customer.Transaction[0]?.date
+      ? format(new Date(customer.Transaction[0].date), 'yyyy-MM-dd')
+      : customer.lastPayment
+      ? format(new Date(customer.lastPayment), 'yyyy-MM-dd')
+      : null,
   }));
 }
 

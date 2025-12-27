@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { MoreHorizontal, PlusCircle } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { CustomerFormDialog } from "./customer-form-dialog";
+import { CheckoutDialog } from "./checkout-dialog";
 import { deleteCustomer } from "@/app/customers/actions";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -24,7 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const MonthsOccupied = ({ entryDate }: { entryDate: string }) => {
+const MonthsOccupied = ({ entryDate, checkoutDate }: { entryDate: string; checkoutDate?: string | null }) => {
   const [months, setMonths] = useState(0);
 
   useEffect(() => {
@@ -33,19 +34,19 @@ const MonthsOccupied = ({ entryDate }: { entryDate: string }) => {
       return;
     }
     const start = new Date(entryDate);
-    const now = new Date();
+    const end = checkoutDate ? new Date(checkoutDate) : new Date();
 
-    if (isNaN(start.getTime())) {
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       setMonths(0);
       return;
     }
 
-    let calculatedMonths = (now.getFullYear() - start.getFullYear()) * 12;
+    let calculatedMonths = (end.getFullYear() - start.getFullYear()) * 12;
     calculatedMonths -= start.getMonth();
-    calculatedMonths += now.getMonth();
+    calculatedMonths += end.getMonth();
 
     setMonths(calculatedMonths <= 0 ? 1 : calculatedMonths + 1);
-  }, [entryDate]);
+  }, [entryDate, checkoutDate]);
 
   if (!months) {
       return <>-</>;
@@ -59,6 +60,8 @@ export function CustomerList({ customers }: { customers: Customer[] }) {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | undefined>(undefined);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [customerToCheckout, setCustomerToCheckout] = useState<Customer | null>(null);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -78,6 +81,11 @@ export function CustomerList({ customers }: { customers: Customer[] }) {
     setIsAlertOpen(true);
   }
 
+  const confirmCheckout = (customer: Customer) => {
+    setCustomerToCheckout(customer);
+    setIsCheckoutOpen(true);
+  }
+
   const handleDelete = () => {
     if (!customerToDelete) return;
 
@@ -95,10 +103,15 @@ export function CustomerList({ customers }: { customers: Customer[] }) {
 
   return (
     <>
-      <CustomerFormDialog 
-        isOpen={isFormOpen} 
+      <CustomerFormDialog
+        isOpen={isFormOpen}
         onOpenChange={setIsFormOpen}
         customer={selectedCustomer}
+      />
+      <CheckoutDialog
+        isOpen={isCheckoutOpen}
+        onOpenChange={setIsCheckoutOpen}
+        customer={customerToCheckout}
       />
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
         <AlertDialogContent>
@@ -147,6 +160,9 @@ export function CustomerList({ customers }: { customers: Customer[] }) {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => openFormForEdit(customer)}>Edit</DropdownMenuItem>
+                        {customer.roomNumber && !customer.checkoutDate && (
+                          <DropdownMenuItem onClick={() => confirmCheckout(customer)}>Checkout</DropdownMenuItem>
+                        )}
                         <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => confirmDelete(customer.id)}>Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -166,7 +182,7 @@ export function CustomerList({ customers }: { customers: Customer[] }) {
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium">Months Occupied</span>
                       <Badge variant="outline">
-                        <MonthsOccupied entryDate={customer.entryDate} /> months
+                        <MonthsOccupied entryDate={customer.entryDate} checkoutDate={customer.checkoutDate} /> months
                       </Badge>
                     </div>
 
@@ -209,7 +225,7 @@ export function CustomerList({ customers }: { customers: Customer[] }) {
                         <TableCell>{customer.phone}</TableCell>
                         <TableCell>{customer.entryDate}</TableCell>
                         <TableCell>{customer.lastPaymentDate || 'N/A'}</TableCell>
-                        <TableCell><MonthsOccupied entryDate={customer.entryDate} /></TableCell>
+                        <TableCell><MonthsOccupied entryDate={customer.entryDate} checkoutDate={customer.checkoutDate} /></TableCell>
                         <TableCell>{customer.roomNumber || 'N/A'}</TableCell>
                         <TableCell>
                           <DropdownMenu>
@@ -222,6 +238,9 @@ export function CustomerList({ customers }: { customers: Customer[] }) {
                             <DropdownMenuContent align="end">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
                               <DropdownMenuItem onClick={() => openFormForEdit(customer)}>Edit</DropdownMenuItem>
+                              {customer.roomNumber && !customer.checkoutDate && (
+                                <DropdownMenuItem onClick={() => confirmCheckout(customer)}>Checkout</DropdownMenuItem>
+                              )}
                               <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => confirmDelete(customer.id)}>Delete</DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
