@@ -39,15 +39,15 @@ until pg_isready -h db -p 5432 -U postgres 2>/dev/null; do
   sleep 2
 done
 
-echo "Database is ready - running migrations..."
-npx prisma migrate deploy || {
-  echo "Migration failed, trying to baseline and deploy..."
-  npx prisma migrate resolve --applied "20250711152613_add_user_model"
-  npx prisma migrate resolve --applied "20250713033745_add_room_model_and_last_payment"
-  npx prisma migrate resolve --applied "20250720103330_add_user_relations"
-  npx prisma migrate deploy
+echo "Database is ready - ensuring schema is in sync..."
+echo "Running Prisma schema synchronization..."
+npx prisma db push --skip-generate || {
+  echo "Schema sync failed, retrying in 10 seconds..."
+  sleep 10
+  npx prisma db push --skip-generate
 }
 
+echo "Schema synchronized successfully!"
 echo "Starting application..."
 npm start
 EOF

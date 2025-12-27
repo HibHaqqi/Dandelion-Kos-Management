@@ -1,4 +1,4 @@
-name: Simple Auto Deploy
+name: Auto Deploy to Production
 
 on:
   push:
@@ -7,17 +7,44 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Deploy to VPS
+    - name: Deploy to VPS via SSH
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.VPS_HOST }}
         username: ${{ secrets.VPS_USERNAME }}
         password: ${{ secrets.VPS_PASSWORD }}
         port: ${{ secrets.VPS_PORT || 22 }}
+        script_stop: true
         script: |
-          cd ${{ secrets.PROJECT_PATH || '/home/haqqi/app/biztrackkos-2' }}
-          git pull
-          docker compose down
-          docker compose up -d --build
+          set -e
+
+          echo "=== Starting Deployment ==="
+          echo "Project Path: ${{ secrets.PROJECT_PATH || '/home/hibhaqqi/code/biztrackkos-2' }}"
+
+          # Navigate to project directory
+          cd ${{ secrets.PROJECT_PATH || '/home/hibhaqqi/code/biztrackkos-2' }}
+
+          echo "Step 1: Pulling latest changes..."
+          git fetch origin
+          git reset --hard origin/master
+          git pull origin master
+
+          echo "Step 2: Stopping running containers..."
+          docker compose down || true
+
+          echo "Step 3: Building and starting new containers..."
+          docker compose up -d --build --force-recreate
+
+          echo "Step 4: Waiting for application to be healthy..."
+          sleep 15
+
+          echo "Step 5: Checking container status..."
+          docker compose ps
+
+          echo "Step 6: Showing recent logs..."
+          docker compose logs --tail=50 app
+
+          echo "=== Deployment Complete ==="
+          echo "Application should be available at http://${{ secrets.VPS_HOST }}:9002"
