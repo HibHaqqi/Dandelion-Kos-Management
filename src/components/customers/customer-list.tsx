@@ -188,9 +188,16 @@ export function CustomerList({ customers }: { customers: Customer[] }) {
 
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium">Room</span>
-                      <Badge variant={customer.roomNumber ? "default" : "secondary"}>
-                        {customer.roomNumber || 'N/A'}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={customer.roomNumber ? "default" : "secondary"}>
+                          {customer.roomNumber || 'N/A'}
+                        </Badge>
+                        {customer.checkoutDate && (
+                          <Badge variant="destructive" className="text-xs">
+                            Checked Out
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -226,7 +233,16 @@ export function CustomerList({ customers }: { customers: Customer[] }) {
                         <TableCell>{customer.entryDate}</TableCell>
                         <TableCell>{customer.lastPaymentDate || 'N/A'}</TableCell>
                         <TableCell><MonthsOccupied entryDate={customer.entryDate} checkoutDate={customer.checkoutDate} /></TableCell>
-                        <TableCell>{customer.roomNumber || 'N/A'}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <span>{customer.roomNumber || 'N/A'}</span>
+                            {customer.checkoutDate && (
+                              <Badge variant="destructive" className="text-xs">
+                                Checked Out
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>

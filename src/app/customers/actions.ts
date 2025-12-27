@@ -64,12 +64,11 @@ export async function checkoutCustomer(id: string, checkoutDate: string) {
     throw new Error('Customer not found');
   }
 
-  // Update customer with checkout date and clear room assignment
+  // Update customer with checkout date (keep roomNumber for historical record)
   await prisma.customer.update({
     where: { id, userId: session.userId },
     data: {
       checkoutDate: new Date(checkoutDate),
-      roomNumber: null,
     },
   });
 
