@@ -6,6 +6,8 @@ export type Customer = {
   nik: string;
   roomNumber?: string;
   lastPayment?: string;
+  checkoutDate?: string | null;
+  lastPaymentDate?: string | null;
 };
 
 export type Room = {
