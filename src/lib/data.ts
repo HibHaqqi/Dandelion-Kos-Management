@@ -8,33 +8,58 @@ export async function getCustomers() {
   if (!session?.userId) {
     return [];
   }
-  const customers = await prisma.customer.findMany({
-    where: { userId: session.userId },
-    include: {
-      Transaction: {
-        where: {
-          type: 'revenue',
+
+  try {
+    const customers = await prisma.customer.findMany({
+      where: { userId: session.userId },
+      include: {
+        Transaction: {
+          where: {
+            type: 'revenue',
+          },
+          orderBy: {
+            date: 'desc',
+          },
+          take: 1,
         },
-        orderBy: {
-          date: 'desc',
-        },
-        take: 1,
       },
-    },
-    orderBy: {
-      entryDate: 'desc',
-    },
-  });
-  return customers.map((customer) => ({
-    ...customer,
-    entryDate: format(new Date(customer.entryDate), 'yyyy-MM-dd'),
-    checkoutDate: customer.checkoutDate ? format(new Date(customer.checkoutDate), 'yyyy-MM-dd') : null,
-    lastPaymentDate: customer.Transaction[0]?.date
-      ? format(new Date(customer.Transaction[0].date), 'yyyy-MM-dd')
-      : customer.lastPayment
-      ? format(new Date(customer.lastPayment), 'yyyy-MM-dd')
-      : null,
-  }));
+      orderBy: {
+        entryDate: 'desc',
+      },
+    });
+    return customers.map((customer) => ({
+      ...customer,
+      entryDate: format(new Date(customer.entryDate), 'yyyy-MM-dd'),
+      checkoutDate: customer.checkoutDate ? format(new Date(customer.checkoutDate), 'yyyy-MM-dd') : null,
+      lastPaymentDate: customer.Transaction[0]?.date
+        ? format(new Date(customer.Transaction[0].date), 'yyyy-MM-dd')
+        : customer.lastPayment
+        ? format(new Date(customer.lastPayment), 'yyyy-MM-dd')
+        : null,
+    }));
+  } catch (error) {
+    console.error('Error fetching customers:', error);
+    // Fallback: fetch without Transaction relation if the above fails
+    try {
+      const customers = await prisma.customer.findMany({
+        where: { userId: session.userId },
+        orderBy: {
+          entryDate: 'desc',
+        },
+      });
+      return customers.map((customer) => ({
+        ...customer,
+        entryDate: format(new Date(customer.entryDate), 'yyyy-MM-dd'),
+        checkoutDate: customer.checkoutDate ? format(new Date(customer.checkoutDate), 'yyyy-MM-dd') : null,
+        lastPaymentDate: customer.lastPayment
+          ? format(new Date(customer.lastPayment), 'yyyy-MM-dd')
+          : null,
+      }));
+    } catch (fallbackError) {
+      console.error('Error in fallback customer fetch:', fallbackError);
+      return [];
+    }
+  }
 }
 
 export async function getTransactions() {
