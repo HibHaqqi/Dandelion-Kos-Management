@@ -24,8 +24,12 @@ export type Transaction = {
   date: string;
   description: string;
   category?: string;
-  roomNumber?: string; 
+  roomNumber?: string;
   customerName?: string;
+  status?: string;
+  receiptUrl?: string | null;
+  isVerified?: boolean;
+  rejectionReason?: string | null;
 };
 
 export type Category = {

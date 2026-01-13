@@ -1,8 +1,7 @@
 'use server';
 
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createSession } from '@/lib/session';
+import { createSession, destroySession } from '@/lib/session';
 import prisma from '@/lib/db';
 import bcrypt from 'bcryptjs';
 
@@ -15,19 +14,46 @@ export async function login(
 
   const user = await prisma.user.findUnique({
     where: { email },
+    include: {
+      tenantProfile: {
+        include: {
+          customer: true,
+        },
+      },
+    },
   });
 
   if (user && (await bcrypt.compare(password, user.password))) {
-    await createSession(user.id);
-    // Redirect must be called outside of a try/catch block.
-    redirect('/');
+    // Prepare session data based on role
+    const role = user.role as 'ADMIN' | 'TENANT';
+    let customerId: string | undefined;
+    let tenantId: string | undefined;
+
+    if (role === 'TENANT' && user.tenantProfile) {
+      customerId = user.tenantProfile.customerId;
+      tenantId = user.tenantProfile.id;
+
+      // Check if tenant account is active
+      if (!user.tenantProfile.active) {
+        return { error: 'Your tenant account has been deactivated. Please contact admin.' };
+      }
+    }
+
+    // Create session with role and tenant info
+    await createSession(user.id, role, customerId, tenantId);
+
+    // Role-based redirect
+    if (role === 'TENANT') {
+      redirect('/tenant/dashboard');
+    } else {
+      redirect('/');
+    }
   }
 
   return { error: 'Invalid email or password.' };
 }
 
 export async function logout() {
-  const cookieStore = cookies();
-  cookieStore.set('session', '', { expires: new Date(0) });
+  await destroySession();
   redirect('/login');
 }

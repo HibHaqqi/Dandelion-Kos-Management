@@ -81,6 +81,10 @@ export async function getTransactions() {
       category: transaction.category ?? undefined,
       roomNumber: transaction.roomNumber ?? undefined,
       customerName: transaction.customerName ?? undefined,
+      status: transaction.status ?? undefined,
+      receiptUrl: transaction.receiptUrl ?? undefined,
+      isVerified: transaction.isVerified ?? undefined,
+      rejectionReason: transaction.rejectionReason ?? undefined,
     }));
   } catch (error) {
     console.error('Error fetching transactions:', error);

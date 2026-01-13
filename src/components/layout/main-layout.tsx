@@ -8,12 +8,18 @@ export async function MainLayout({ children }: { children: React.ReactNode }) {
   const headersList = await headers();
   const pathname = headersList.get('x-next-pathname') || '';
   const session = (await cookies()).get('session');
-  
-  // Don't show the sidebar on the login page.
-  if (pathname === '/login' || !session?.value) {
+
+  // Don't show the sidebar on:
+  // - Login/register pages
+  // - Tenant routes (they have their own navigation)
+  const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/tenant/register';
+  const isTenantRoute = pathname?.startsWith('/tenant');
+  const noSidebar = !session?.value || isAuthPage || isTenantRoute;
+
+  if (noSidebar) {
     return <>{children}</>;
   }
-  
+
   return (
     <SidebarProvider>
       <Sidebar>

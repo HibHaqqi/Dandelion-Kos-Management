@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   },
   eslint: {
     ignoreDuringBuilds: true,
-  },
+  } as any, // Type assertion for Next.js 16 compatibility
   images: {
     remotePatterns: [
       {
