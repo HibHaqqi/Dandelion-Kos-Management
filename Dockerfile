@@ -1,58 +1,75 @@
-# Use the official Node.js 20 image.
-FROM node:20-slim
+# Use the official Node.js 20 image (Alpine for smaller size)
+FROM node:20-alpine AS base
 
-# Install OpenSSL and PostgreSQL client tools
-RUN apt-get update -y && apt-get install -y openssl postgresql-client && rm -rf /var/lib/apt/lists/*
+# Install dependencies only when needed
+FROM base AS deps
+# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
+RUN apk add --no-cache libc6-compat postgresql-client
 
-# Set the working directory in the container.
 WORKDIR /app
 
-# Copy package.json and package-lock.json to the working directory.
-COPY package*.json ./
+# Install dependencies based on the preferred package manager
+COPY package.json package-lock.json* ./
+RUN npm ci
 
-# Copy the prisma schema
-COPY prisma ./prisma
-
-# Install dependencies.
-RUN npm install
-
-# Generate Prisma client
-RUN npx prisma generate
-
-# Copy the rest of the application code to the working directory.
+# Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build the Next.js application.
+# Generate Prisma client during build
+RUN npx prisma generate
+
+# Build environment variables
+ARG NEXT_PUBLIC_APP_URL
+ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+ARG DATABASE_URL
+ENV DATABASE_URL=${DATABASE_URL}
+
+# Build Next.js application
+# Disable telemetry during build
+ENV NEXT_TELEMETRY_DISABLED=1
+
 RUN npm run build
 
-# Expose the port the app runs on.
+# Production image, copy all the files and run next
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/public ./public
+
+# Set the correct permission for prerender cache
+RUN mkdir -p .next
+RUN chown -R nextjs:nodejs /app
+
+# Copy Prisma files and generated client
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+
+# Copy the Next.js build output
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+
+# Create uploads directory for file uploads
+RUN mkdir -p /app/public/uploads && chown -R nextjs:nodejs /app/public/uploads
+
+USER nextjs
+
 EXPOSE 9002
 
-# Create a startup script
-COPY <<EOF /app/start.sh
-#!/bin/bash
-set -e
+ENV PORT=9002
+ENV HOSTNAME="0.0.0.0"
 
-echo "Waiting for database to be ready..."
-until pg_isready -h db -p 5432 -U postgres 2>/dev/null; do
-  echo "Database is unavailable - sleeping"
-  sleep 2
-done
-
-echo "Database is ready - ensuring schema is in sync..."
-echo "Running Prisma schema synchronization..."
-npx prisma db push --skip-generate || {
-  echo "Schema sync failed, retrying in 10 seconds..."
-  sleep 10
-  npx prisma db push --skip-generate
-}
-
-echo "Schema synchronized successfully!"
-echo "Starting application..."
-npm start
-EOF
-
+# Create startup script
+COPY --from=builder /app/start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
-# Define the command to start the app.
 CMD ["/app/start.sh"]
