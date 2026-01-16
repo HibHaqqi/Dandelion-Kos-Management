@@ -15,7 +15,7 @@ export function PageHeader({ title, actions }: PageHeaderProps) {
     <div className={`flex ${isMobile ? 'flex-col gap-4' : 'items-center justify-between'}`}>
       <div className={`flex items-center ${isMobile ? 'justify-between w-full' : 'gap-4'}`}>
         <div className="flex items-center gap-4">
-          {isMobile && <SidebarTrigger />}
+          <SidebarTrigger />
           <h1 className={`font-bold tracking-tight ${isMobile ? 'text-2xl' : 'text-3xl'}`}>{title}</h1>
         </div>
         {actions && isMobile && <div className="flex items-center gap-2">{actions}</div>}

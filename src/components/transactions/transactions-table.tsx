@@ -5,21 +5,25 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, Receipt } from 'lucide-react';
 import { useState, useTransition } from 'react';
 import { TransactionFormDialog } from './transaction-form-dialog';
+import { PaymentVerificationDialog } from './payment-verification-dialog';
 import { deleteTransaction } from '@/app/transactions/actions';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../ui/alert-dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent } from '@/components/ui/card';
+import { useRouter } from 'next/navigation';
 
 export function TransactionsTable({ transactions, rooms, categories = [] }: { transactions: Transaction[], rooms: Room[], categories?: Category[] }) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  const router = useRouter();
   const isMobile = useIsMobile();
 
   const handleEdit = (transaction: Transaction) => {
@@ -30,6 +34,21 @@ export function TransactionsTable({ transactions, rooms, categories = [] }: { tr
   const handleDelete = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
     setIsAlertOpen(true);
+  };
+
+  const handleVerifyPayment = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    setIsVerifyDialogOpen(true);
+  };
+
+  const handleVerificationComplete = () => {
+    router.refresh();
+  };
+
+  const statusColors: Record<string, string> = {
+    PENDING: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+    VERIFIED: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+    REJECTED: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
   };
 
   const confirmDelete = () => {
@@ -74,6 +93,12 @@ export function TransactionsTable({ transactions, rooms, categories = [] }: { tr
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      {transaction.receiptUrl && transaction.status === 'PENDING' && (
+                        <DropdownMenuItem onClick={() => handleVerifyPayment(transaction)}>
+                          <Receipt className="h-4 w-4 mr-2" />
+                          Verify Payment
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem onClick={() => handleEdit(transaction)}>Edit</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleDelete(transaction)} className="text-red-600">Delete</DropdownMenuItem>
                     </DropdownMenuContent>
@@ -81,6 +106,14 @@ export function TransactionsTable({ transactions, rooms, categories = [] }: { tr
                 </div>
 
                 <div className="space-y-2">
+                  {transaction.status && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">Status</span>
+                      <Badge className={statusColors[transaction.status]}>
+                        {transaction.status}
+                      </Badge>
+                    </div>
+                  )}
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">
                       {isRevenue ? 'Room' : 'Category'}
@@ -99,6 +132,20 @@ export function TransactionsTable({ transactions, rooms, categories = [] }: { tr
                       IDR {transaction.amount.toLocaleString('id-ID')}
                     </span>
                   </div>
+
+                  {transaction.receiptUrl && (
+                    <div className="pt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => window.open(transaction.receiptUrl, '_blank')}
+                      >
+                        <Receipt className="h-4 w-4 mr-2" />
+                        View Receipt
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -110,6 +157,12 @@ export function TransactionsTable({ transactions, rooms, categories = [] }: { tr
           transaction={selectedTransaction}
           rooms={rooms}
           categories={categories}
+        />
+        <PaymentVerificationDialog
+          isOpen={isVerifyDialogOpen}
+          onClose={() => setIsVerifyDialogOpen(false)}
+          transaction={selectedTransaction}
+          onVerify={handleVerificationComplete}
         />
         <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
           <AlertDialogContent>
@@ -141,6 +194,7 @@ export function TransactionsTable({ transactions, rooms, categories = [] }: { tr
               <TableHead>Date</TableHead>
               <TableHead>Description</TableHead>
               {isRevenue ? <TableHead>Room</TableHead> : <TableHead>Category</TableHead>}
+              <TableHead>Status</TableHead>
               <TableHead className="text-right">Amount</TableHead>
               <TableHead className="w-[70px]"></TableHead>
             </TableRow>
@@ -151,6 +205,15 @@ export function TransactionsTable({ transactions, rooms, categories = [] }: { tr
                 <TableCell>{transaction.date}</TableCell>
                 <TableCell className="font-medium">{transaction.description}</TableCell>
                 {isRevenue ? <TableCell>{transaction.roomNumber}</TableCell> : <TableCell><Badge variant="outline">{transaction.category}</Badge></TableCell>}
+                <TableCell>
+                  {transaction.status ? (
+                    <Badge className={statusColors[transaction.status]}>
+                      {transaction.status}
+                    </Badge>
+                  ) : (
+                    <span className="text-muted-foreground">-</span>
+                  )}
+                </TableCell>
                 <TableCell className="text-right">IDR {transaction.amount.toLocaleString('id-ID')}</TableCell>
                 <TableCell>
                   <DropdownMenu>
@@ -161,6 +224,18 @@ export function TransactionsTable({ transactions, rooms, categories = [] }: { tr
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      {transaction.receiptUrl && transaction.status === 'PENDING' && (
+                        <DropdownMenuItem onClick={() => handleVerifyPayment(transaction)}>
+                          <Receipt className="h-4 w-4 mr-2" />
+                          Verify Payment
+                        </DropdownMenuItem>
+                      )}
+                      {transaction.receiptUrl && (
+                        <DropdownMenuItem onClick={() => window.open(transaction.receiptUrl, '_blank')}>
+                          <Receipt className="h-4 w-4 mr-2" />
+                          View Receipt
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem onClick={() => handleEdit(transaction)}>Edit</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleDelete(transaction)} className="text-red-600">Delete</DropdownMenuItem>
                     </DropdownMenuContent>
@@ -177,6 +252,12 @@ export function TransactionsTable({ transactions, rooms, categories = [] }: { tr
         transaction={selectedTransaction}
         rooms={rooms}
         categories={categories}
+      />
+      <PaymentVerificationDialog
+        isOpen={isVerifyDialogOpen}
+        onClose={() => setIsVerifyDialogOpen(false)}
+        transaction={selectedTransaction}
+        onVerify={handleVerificationComplete}
       />
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
         <AlertDialogContent>

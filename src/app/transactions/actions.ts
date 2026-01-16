@@ -90,6 +90,28 @@ export async function updateTransaction(id: string, data: {
     throw new Error('Unauthorized');
   }
   const userId = session.userId;
+  const role = session.role;
+
+  // Find the transaction first
+  const existingTransaction = await prisma.transaction.findUnique({
+    where: { id },
+  });
+
+  if (!existingTransaction) {
+    throw new Error('Transaction not found');
+  }
+
+  // Check permissions:
+  // - Admin can update any transaction
+  // - Tenant can only update their own pending transactions
+  if (role === 'TENANT') {
+    if (existingTransaction.userId !== userId) {
+      throw new Error('You can only update your own transactions');
+    }
+    if (existingTransaction.status !== 'PENDING') {
+      throw new Error('You can only update pending transactions. Contact admin for verified/rejected payments.');
+    }
+  }
 
   let customerData: { customerId?: string; customerName?: string } = {};
   if (type === 'revenue' && roomNumber) {
@@ -100,7 +122,7 @@ export async function updateTransaction(id: string, data: {
   }
 
   await prisma.transaction.update({
-    where: { id, userId },
+    where: { id },
     data: {
       type,
       amount,
@@ -119,6 +141,8 @@ export async function updateTransaction(id: string, data: {
   revalidatePath('/');
   revalidatePath('/customers');
   revalidatePath('/rooms');
+  revalidatePath('/tenant/payments');
+  revalidatePath('/tenant/dashboard');
 }
 
 export async function deleteTransaction(id: string) {
@@ -127,24 +151,42 @@ export async function deleteTransaction(id: string) {
     throw new Error('Unauthorized');
   }
   const userId = session.userId;
+  const role = session.role;
 
+  // Find the transaction first
   const transaction = await prisma.transaction.findUnique({
-    where: { id, userId },
+    where: { id },
   });
 
   if (!transaction) {
     throw new Error('Transaction not found');
   }
 
+  // Check permissions:
+  // - Admin can delete any transaction
+  // - Tenant can only delete their own pending transactions
+  if (role === 'TENANT') {
+    if (transaction.userId !== userId) {
+      throw new Error('You can only delete your own transactions');
+    }
+    if (transaction.status !== 'PENDING') {
+      throw new Error('You can only delete pending transactions. Contact admin for verified/rejected payments.');
+    }
+  }
+  // Admin can delete any transaction (no additional check needed)
+
+  // Delete the transaction
   await prisma.transaction.delete({
-    where: { id, userId },
+    where: { id },
   });
 
+  // Update room status if this was a revenue transaction
   if (transaction.type === 'revenue' && transaction.roomNumber) {
     const lastTransaction = await prisma.transaction.findFirst({
       where: {
         roomNumber: transaction.roomNumber,
         type: 'revenue',
+        status: 'VERIFIED', // Only count verified payments for room status
       },
       orderBy: {
         date: 'desc',
@@ -164,4 +206,6 @@ export async function deleteTransaction(id: string) {
   revalidatePath('/');
   revalidatePath('/customers');
   revalidatePath('/rooms');
+  revalidatePath('/tenant/payments');
+  revalidatePath('/tenant/dashboard');
 }
