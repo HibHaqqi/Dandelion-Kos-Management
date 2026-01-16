@@ -1,16 +1,18 @@
-# Simple Dockerfile for reliable deployment
+# Optimized Dockerfile for faster builds
 FROM node:20-alpine
 
 # Install dependencies
-RUN apk add --no-cache openssl postgresql-client
+RUN apk add --no-cache --no-cache openssl postgresql-client
 
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY package.json package-lock.json ./
 
-# Install dependencies
-RUN npm install --legacy-peer-deps
+# Install dependencies with npm config for speed
+RUN npm config set fetch-retries 5 && \
+    npm config set fetch-timeout 60000 && \
+    npm install --legacy-peer-deps --no-audit --no-fund --quiet
 
 # Copy application files
 COPY . .
