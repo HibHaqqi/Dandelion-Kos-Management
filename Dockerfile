@@ -9,10 +9,14 @@ WORKDIR /app
 # Copy package files
 COPY package.json package-lock.json ./
 
-# Install dependencies with npm config for speed
-RUN npm config set fetch-retries 5 && \
-    npm config set fetch-timeout 60000 && \
-    npm install --legacy-peer-deps --no-audit --no-fund --quiet
+# Increase Node.js memory limit and install dependencies
+ENV NODE_OPTIONS=--max-old-space-size=4096
+RUN npm config set fetch-retries 10 && \
+    npm config set fetch-timeout 120000 && \
+    npm config set fetch-max-mb-timestamp 50 && \
+    npm cache clean --force && \
+    npm install --legacy-peer-deps --no-audit --no-fund --verbose || \
+    (npm cache clean --force && npm install --legacy-peer-deps --no-audit --no-fund)
 
 # Copy application files
 COPY . .
