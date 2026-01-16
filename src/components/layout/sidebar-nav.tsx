@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, Users, Receipt, Building, MessageSquare, DollarSign } from "lucide-react";
+import { LayoutDashboard, Users, Receipt, Building, MessageSquare, DollarSign, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import {
@@ -19,6 +19,7 @@ const links = [
   { href: "/customers", label: "Customers", icon: Users },
   { href: "/transactions", label: "Transactions", icon: Receipt },
   { href: "/rooms", label: "Rooms", icon: Building },
+  { href: "/admin/info", label: "Info Settings", icon: Settings },
   { href: "/admin/complaints", label: "Complaints", icon: MessageSquare, showBadge: true },
   { href: "/admin/payments", label: "Tenant Payments", icon: DollarSign, showBadge: true },
 ];

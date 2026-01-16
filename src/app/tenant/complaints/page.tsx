@@ -49,19 +49,19 @@ export default async function ComplaintsPage() {
   ).length;
 
   return (
-    <div className="container mx-auto p-4 md:p-6 space-y-6">
+    <div className="container mx-auto p-4 md:p-6 space-y-6 pb-20 md:pb-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
             My Complaints
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
             Track your maintenance requests and issues
           </p>
         </div>
-        <Link href="/tenant/complaints/new">
-          <Button className="bg-teal-600 hover:bg-teal-700">
+        <Link href="/tenant/complaints/new" className="self-start">
+          <Button className="bg-teal-600 hover:bg-teal-700 w-full sm:w-auto">
             + New Complaint
           </Button>
         </Link>

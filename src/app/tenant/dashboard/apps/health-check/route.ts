@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
 import { SERVER_APPS } from '@/lib/server-apps';
+import prisma from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,9 +11,30 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    if (!session.tenantId) {
+      return NextResponse.json({ error: 'Tenant profile not found' }, { status: 404 });
+    }
+
+    // Fetch tenant's custom server apps
+    const tenantServerApps = await prisma.tenantServerApp.findMany({
+      where: {
+        tenantId: session.tenantId,
+        isActive: true,
+      },
+      orderBy: { name: 'asc' },
+    });
+
+    // Use custom apps if available, otherwise fall back to defaults
+    const appsToCheck = tenantServerApps.length > 0
+      ? tenantServerApps.map((app) => ({
+          id: app.appId,
+          url: app.url,
+        }))
+      : SERVER_APPS;
+
     // Check health of all server apps
     const healthChecks = await Promise.allSettled(
-      SERVER_APPS.map(async (app) => {
+      appsToCheck.map(async (app) => {
         const startTime = Date.now();
 
         try {

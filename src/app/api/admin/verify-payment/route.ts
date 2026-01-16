@@ -34,6 +34,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get the original transaction
+    const originalTransaction = await prisma.transaction.findUnique({
+      where: { id: transactionId },
+    });
+
+    if (!originalTransaction) {
+      return NextResponse.json(
+        { error: 'Transaction not found' },
+        { status: 404 }
+      );
+    }
+
     // Update transaction status
     const transaction = await prisma.transaction.update({
       where: { id: transactionId },
@@ -43,6 +55,27 @@ export async function POST(request: NextRequest) {
         rejectionReason: status === 'REJECTED' ? rejectionReason : null,
       },
     });
+
+    // If verified, update room and customer last payment dates
+    if (status === 'VERIFIED') {
+      // Update room and customer last payment dates
+      if (originalTransaction.roomNumber) {
+        await prisma.room.updateMany({
+          where: { roomNumber: originalTransaction.roomNumber },
+          data: {
+            status: 'occupied',
+            lastPayment: originalTransaction.date,
+          },
+        });
+      }
+
+      if (originalTransaction.customerId) {
+        await prisma.customer.update({
+          where: { id: originalTransaction.customerId },
+          data: { lastPayment: originalTransaction.date },
+        });
+      }
+    }
 
     return NextResponse.json({
       success: true,

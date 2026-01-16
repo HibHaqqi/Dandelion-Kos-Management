@@ -5,7 +5,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { SERVER_APPS, ServerApp } from '@/lib/server-apps';
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
 
-export function ServerAppsGrid() {
+interface ServerAppsGridProps {
+  customApps?: ServerApp[];
+}
+
+export function ServerAppsGrid({ customApps }: ServerAppsGridProps) {
+  // Use custom apps if provided, otherwise fall back to default SERVER_APPS
+  const apps = customApps && customApps.length > 0 ? customApps : SERVER_APPS;
+
   const [appStatus, setAppStatus] = useState<Record<string, 'online' | 'offline' | 'checking'>>({});
   const [latency, setLatency] = useState<Record<string, number>>({});
 
@@ -17,11 +24,11 @@ export function ServerAppsGrid() {
     const interval = setInterval(checkHealth, 30000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [apps]); // Added apps dependency
 
   async function checkHealth() {
     setAppStatus((prev) =>
-      Object.fromEntries(SERVER_APPS.map((app) => [app.id, 'checking']))
+      Object.fromEntries(apps.map((app) => [app.id, 'checking']))
     );
 
     try {
@@ -52,7 +59,7 @@ export function ServerAppsGrid() {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {SERVER_APPS.map((app) => (
+      {apps.map((app) => (
         <ServerAppCard
           key={app.id}
           app={app}

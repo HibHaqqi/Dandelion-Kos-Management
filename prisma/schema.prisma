@@ -74,6 +74,9 @@ model User {
   transactions Transaction[]
   rooms        Room[]
   categories   Category[]
+  buildingInfo BuildingInfo[] // NEW: Building information updates
+  roomInfo     RoomInfo[]      // NEW: Room information updates
+  tenantServerApps TenantServerApp[] // NEW: Tenant server app configurations
 
   // Tenant relation (one-to-one)
   tenantProfile Tenant?      // NEW: Tenant profile linked to user
@@ -104,6 +107,7 @@ model Tenant {
   user        User      @relation(fields: [userId], references: [id])
   customer    Customer  @relation(fields: [customerId], references: [id])
   complaints  Complaint[]
+  serverApps  TenantServerApp[] // NEW: Custom server apps for this tenant
 }
 
 // NEW: Complaint/Ticket Model
@@ -120,4 +124,54 @@ model Complaint {
   updatedAt   DateTime  @updatedAt
 
   tenant      Tenant    @relation(fields: [tenantId], references: [id])
+}
+
+// NEW: Building Information Model (shared by all tenants)
+model BuildingInfo {
+  id          String    @id @default(cuid())
+  key         String    @unique // "wifi_password", "gate_code", etc.
+  value       String    // The actual information
+  category    String    // "general" | "security" | "contact"
+  description String?   // Optional description
+  isActive    Boolean   @default(true)
+  updatedAt   DateTime  @updatedAt
+  updatedBy   String?   // User ID of who last updated
+
+  user        User?     @relation(fields: [updatedBy], references: [id])
+}
+
+// NEW: Room-Specific Information Model (private to each room)
+model RoomInfo {
+  id          String    @id @default(cuid())
+  roomNumber  String    // Links to room
+  key         String    // "electricity_token", "entry_date", "server_password", etc.
+  value       String    // The actual information
+  category    String    // "access" | "utilities" | "server" | "general"
+  description String?   // Optional description
+  updatedAt   DateTime  @updatedAt
+  updatedBy   String?   // User ID of who last updated
+
+  user        User?     @relation(fields: [updatedBy], references: [id])
+
+  @@unique([roomNumber, key]) // One value per key per room
+}
+
+// NEW: Tenant Server Apps Configuration (per-tenant customizable apps)
+model TenantServerApp {
+  id          String    @id @default(cuid())
+  tenantId    String    // Link to tenant
+  appId       String    // App identifier (e.g., "jellyfin", "homeassistant")
+  name        String    // Display name
+  url         String    // Custom URL for this tenant
+  icon        String    @default("🌐") // Icon emoji
+  description String?   // Optional description
+  category    String    @default("other") // "media" | "home" | "other"
+  isActive    Boolean   @default(true)
+  updatedAt   DateTime  @updatedAt
+  updatedBy   String?   // Admin user ID who last updated
+
+  tenant      Tenant    @relation(fields: [tenantId], references: [id])
+  user        User?     @relation(fields: [updatedBy], references: [id])
+
+  @@unique([tenantId, appId]) // One config per app per tenant
 }

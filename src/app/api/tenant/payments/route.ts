@@ -18,6 +18,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Verify that the user still exists in the database
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User account not found. Please log in again.' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { amount, date, receiptUrl } = body;
 

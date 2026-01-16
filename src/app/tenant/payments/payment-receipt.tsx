@@ -2,9 +2,21 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Receipt } from 'lucide-react';
+import { Calendar, Receipt, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { ImageModal } from '@/components/ui/image-modal';
+import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface PaymentReceiptProps {
   payment: {
@@ -21,11 +33,35 @@ interface PaymentReceiptProps {
 
 export function PaymentReceipt({ payment }: PaymentReceiptProps) {
   const [modalImage, setModalImage] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const statusColors: Record<string, string> = {
     PENDING: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
     VERIFIED: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
     REJECTED: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+  };
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/tenant/payments/${payment.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        alert(error.error || 'Failed to delete payment');
+        return;
+      }
+
+      // Refresh the page to show updated list
+      window.location.reload();
+    } catch (error) {
+      console.error('Error deleting payment:', error);
+      alert('Failed to delete payment');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -34,6 +70,40 @@ export function PaymentReceipt({ payment }: PaymentReceiptProps) {
         <CardContent className="p-4">
           <div className="flex items-start justify-between">
             <div className="flex-1">
+              {/* Delete button - only show for pending payments */}
+              {payment.status === 'PENDING' && (
+                <div className="flex justify-end mb-2">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="h-8 text-xs"
+                        disabled={isDeleting}
+                      >
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        {isDeleting ? 'Deleting...' : 'Delete'}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Payment?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete this payment of Rp{' '}
+                          {payment.amount.toLocaleString('id-ID')}? This action cannot be
+                          undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete}>
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              )}
               <div className="flex items-center gap-3 mb-2">
                 <p className="text-lg font-bold text-gray-900 dark:text-white">
                   Rp {payment.amount.toLocaleString('id-ID')}

@@ -68,12 +68,36 @@ export async function getTransactions() {
     if (!session?.userId) {
       return [];
     }
-    const transactions = await prisma.transaction.findMany({
-      where: { userId: session.userId },
-      orderBy: {
-        date: 'desc',
-      },
-    });
+
+    // If admin, show all verified tenant payments + admin's own transactions
+    // If tenant, show only their own transactions
+    let transactions;
+
+    if (session.role === 'ADMIN') {
+      // Admin sees:
+      // 1. All transactions they created themselves
+      // 2. All VERIFIED tenant payments
+      transactions = await prisma.transaction.findMany({
+        where: {
+          OR: [
+            { userId: session.userId }, // Admin's own transactions
+            { status: 'VERIFIED', type: 'revenue' }, // All verified tenant payments
+          ],
+        },
+        orderBy: {
+          date: 'desc',
+        },
+      });
+    } else {
+      // Tenant sees only their own transactions
+      transactions = await prisma.transaction.findMany({
+        where: { userId: session.userId },
+        orderBy: {
+          date: 'desc',
+        },
+      });
+    }
+
     return transactions.map((transaction) => ({
       ...transaction,
       date: format(new Date(transaction.date), 'yyyy-MM-dd'),
