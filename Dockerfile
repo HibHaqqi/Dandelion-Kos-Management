@@ -10,13 +10,14 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 
 # Increase Node.js memory limit and install dependencies
+# Skip postinstall since we'll run prisma generate after copying source
 ENV NODE_OPTIONS=--max-old-space-size=4096
 RUN npm config set fetch-retries 10 && \
     npm config set fetch-timeout 120000 && \
     npm config set fetch-max-mb-timestamp 50 && \
     npm cache clean --force && \
-    npm install --legacy-peer-deps --no-audit --no-fund --verbose || \
-    (npm cache clean --force && npm install --legacy-peer-deps --no-audit --no-fund)
+    npm install --legacy-peer-deps --no-audit --no-fund --ignore-scripts || \
+    (npm cache clean --force && npm install --legacy-peer-deps --no-audit --no-fund --ignore-scripts)
 
 # Copy application files
 COPY . .
