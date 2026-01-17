@@ -27,18 +27,6 @@ export default function TenantRegisterPage() {
               </a>
             </p>
           </div>
-
-          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 text-center">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Are you an admin?{' '}
-              <a
-                href="/register"
-                className="font-medium text-cyan-600 hover:text-cyan-500 dark:text-cyan-400"
-              >
-                Register here
-              </a>
-            </p>
-          </div>
         </div>
       </div>
     </div>

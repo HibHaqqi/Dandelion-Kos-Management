@@ -1,6 +1,6 @@
 import { TransactionsView } from "@/components/transactions/transactions-view";
 import { getTransactionsData, getRoomsData, getCategoriesData } from "./index";
-import { seedDefaultCategories } from "@/app/categories/actions";
+import { seedDefaultCategories } from "@/app/(dashboard)/categories/actions";
 import type { Transaction, Room, Category } from "@/types";
 
 export default async function TransactionsPage() {

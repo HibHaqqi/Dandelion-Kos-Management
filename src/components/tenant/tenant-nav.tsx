@@ -10,7 +10,7 @@ import {
   Menu,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { logout } from '@/app/login/actions';
+import { logout } from '@/app/(site)/login/actions';
 
 export function TenantNav() {
   const pathname = usePathname();

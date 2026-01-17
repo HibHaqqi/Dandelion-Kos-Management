@@ -1,4 +1,4 @@
-import { addCustomer } from '@/app/customers/actions';
+import { addCustomer } from '@/app/(dashboard)/customers/actions';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 

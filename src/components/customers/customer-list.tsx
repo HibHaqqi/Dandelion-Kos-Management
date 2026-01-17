@@ -10,7 +10,7 @@ import { MoreHorizontal, PlusCircle } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { CustomerFormDialog } from "./customer-form-dialog";
 import { CheckoutDialog } from "./checkout-dialog";
-import { deleteCustomer } from "@/app/customers/actions";
+import { deleteCustomer } from "@/app/(dashboard)/customers/actions";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";

@@ -15,7 +15,8 @@ export default async function PaymentsPage() {
     redirect('/login');
   }
 
-  if (!session.customerId) {
+  // Check if user has a tenant profile
+  if (!session.tenantId) {
     return (
       <div className="container mx-auto p-6">
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
@@ -25,6 +26,22 @@ export default async function PaymentsPage() {
           <p className="text-red-700 dark:text-red-300">
             Your tenant account is not properly linked. Please contact your
             property administrator.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if user has a room assigned
+  if (!session.customerId) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-6">
+          <h2 className="text-xl font-bold text-amber-900 dark:text-amber-100 mb-2">
+            No Room Assigned
+          </h2>
+          <p className="text-amber-700 dark:text-amber-300">
+            You need to have a room assigned to view payment history. Please contact the property administrator.
           </p>
         </div>
       </div>

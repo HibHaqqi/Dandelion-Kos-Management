@@ -295,7 +295,7 @@ docker-compose down
 
 The project includes a CI/CD pipeline that automatically deploys to VPS on push to `master` branch.
 
-**Setup**: See [CICD_SETUP.md](docs/CICD_SETUP.md) for detailed configuration.
+**Setup**: See [CICD_SETUP.md](documentation/CICD_SETUP.md) for detailed configuration.
 
 ### Manual Deployment
 
@@ -491,10 +491,13 @@ biztrackkos-2/
 │   ├── schema.prisma           # Database schema
 │   └── migrations/             # Migration history
 ├── migrations/                 # Custom SQL migrations
-├── docs/                       # Documentation
+├── documentation/              # Documentation
+│   ├── DOCUMENTATION_INDEX.md  # Start here for all docs
 │   ├── CICD_SETUP.md
-│   ├── ROOM_MANAGEMENT_FEATURES.md
-│   └── MIGRATE_PRODUCTION.md
+│   ├── DEPLOYMENT_GUIDE.md
+│   ├── MULTI_DOMAIN_SUMMARY.md
+│   ├── TENANT_PORTAL_SUMMARY.md
+│   └── ... (see DOCUMENTATION_INDEX.md for full list)
 ├── .gitea/workflows/           # CI/CD pipelines
 │   └── deploy.yml
 ├── public/                     # Static assets
@@ -633,14 +636,16 @@ For questions, issues, or suggestions:
 
 - 📧 Email: support@biztrackkos.com
 - 🐛 Issues: [GitHub Issues](https://github.com/yourusername/biztrackkos-2/issues)
-- 📖 Documentation: [docs/](docs/) folder
+- 📖 Documentation: [documentation/](documentation/) folder
+- 📋 Documentation Index: [DOCUMENTATION_INDEX.md](documentation/DOCUMENTATION_INDEX.md)
 
 ---
 
 ## 🔗 Links
 
 - **Live Demo**: Coming soon
-- **Documentation**: [docs/](docs/)
+- **Documentation**: [documentation/](documentation/)
+- **Documentation Index**: [DOCUMENTATION_INDEX.md](documentation/DOCUMENTATION_INDEX.md) - Start here for all documentation
 - **API Reference**: [API Documentation](#api-documentation)
 - **Changelog**: [CHANGELOG.md](CHANGELOG.md) (to be added)
 

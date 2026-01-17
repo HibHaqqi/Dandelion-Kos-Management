@@ -4,15 +4,19 @@ import prisma from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/session';
 
-export async function addCustomer(data: { name: string; phone: string; nik: string; entryDate: string; roomNumber?: string; }) {
+export async function addCustomer(data: { name: string; email?: string; phone: string; nik: string; entryDate: string; roomNumber?: string; }) {
   const session = await getSession();
   if (!session?.userId) {
     throw new Error('Unauthorized');
   }
   await prisma.customer.create({
     data: {
-      ...data,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      nik: data.nik,
       entryDate: new Date(data.entryDate),
+      roomNumber: data.roomNumber,
       userId: session.userId,
     },
   });
@@ -20,7 +24,7 @@ export async function addCustomer(data: { name: string; phone: string; nik: stri
   revalidatePath('/');
 }
 
-export async function updateCustomer(id: string, data: { name: string; phone: string; nik: string; entryDate: string; roomNumber?: string; }) {
+export async function updateCustomer(id: string, data: { name: string; email?: string; phone: string; nik: string; entryDate: string; roomNumber?: string; }) {
   const session = await getSession();
   if (!session?.userId) {
     throw new Error('Unauthorized');
@@ -28,8 +32,12 @@ export async function updateCustomer(id: string, data: { name: string; phone: st
   await prisma.customer.update({
     where: { id, userId: session.userId },
     data: {
-      ...data,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      nik: data.nik,
       entryDate: new Date(data.entryDate),
+      roomNumber: data.roomNumber,
     },
   });
   revalidatePath('/customers');

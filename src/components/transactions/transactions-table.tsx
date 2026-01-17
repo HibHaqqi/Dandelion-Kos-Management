@@ -9,7 +9,7 @@ import { MoreHorizontal, Receipt } from 'lucide-react';
 import { useState, useTransition } from 'react';
 import { TransactionFormDialog } from './transaction-form-dialog';
 import { PaymentVerificationDialog } from './payment-verification-dialog';
-import { deleteTransaction } from '@/app/transactions/actions';
+import { deleteTransaction } from '@/app/(dashboard)/transactions/actions';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../ui/alert-dialog';
 import { useIsMobile } from '@/hooks/use-mobile';

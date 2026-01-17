@@ -1,4 +1,4 @@
-import { addTransaction } from '@/app/transactions/actions';
+import { addTransaction } from '@/app/(dashboard)/transactions/actions';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 

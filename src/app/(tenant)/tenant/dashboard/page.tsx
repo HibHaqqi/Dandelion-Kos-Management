@@ -14,7 +14,8 @@ export default async function TenantDashboard() {
     redirect('/login');
   }
 
-  if (!session.customerId) {
+  // Check if user has a tenant profile
+  if (!session.tenantId) {
     return (
       <div className="container mx-auto p-6">
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
@@ -25,6 +26,31 @@ export default async function TenantDashboard() {
             Your tenant account is not properly linked. Please contact your
             property administrator.
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if user has a room assigned (customerId)
+  if (!session.customerId) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-6">
+          <h2 className="text-xl font-bold text-amber-900 dark:text-amber-100 mb-2">
+            No Room Assigned
+          </h2>
+          <p className="text-amber-700 dark:text-amber-300 mb-4">
+            Welcome! Your tenant account is set up, but you don't have a room assigned yet.
+            Please contact the property administrator to assign you a room.
+          </p>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 text-sm">
+              <span className="font-semibold">Tenant ID:</span>
+              <span className="font-mono text-xs bg-amber-100 dark:bg-amber-900/40 px-2 py-1 rounded">
+                {session.tenantId}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     );
