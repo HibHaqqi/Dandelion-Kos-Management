@@ -14,12 +14,12 @@ ENV NODE_OPTIONS=--max-old-space-size=4096
 RUN npm config set fetch-retries 10 && \
     npm config set fetch-timeout 120000
 
-# Install dependencies with error handling
+# Install dependencies with error handling (skip postinstall to avoid prisma generate before schema is copied)
 RUN npm cache clean --force && \
-    npm install --legacy-peer-deps --no-audit --no-fund || \
+    npm install --legacy-peer-deps --no-audit --no-fund --ignore-scripts || \
     (echo "First attempt failed, retrying..." && \
      npm cache clean --force && \
-     npm install --legacy-peer-deps --no-audit --no-fund)
+     npm install --legacy-peer-deps --no-audit --no-fund --ignore-scripts)
 
 # Copy application files
 COPY . .
