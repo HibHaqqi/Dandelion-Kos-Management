@@ -2,11 +2,18 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
-import { MainLayout } from '@/components/layout/main-layout';
 
 export const metadata: Metadata = {
-  title: 'BizTrack Lite',
-  description: 'Track your business with ease.',
+  title: 'Dandelion Kos | Digital Living Experience',
+  description: 'Premium boarding with modern management system',
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
+  },
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -17,15 +24,26 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+        <link rel="shortcut icon" href="/icon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/icon.svg" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
           href="https://fonts.googleapis.com/css2?family=Inter&display=swap"
           rel="stylesheet"
         ></link>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+          rel="stylesheet"
+        ></link>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+          rel="stylesheet"
+        ></link>
       </head>
       <body className={cn('font-body antialiased')}>
-        <MainLayout>{children}</MainLayout>
+        {children}
         <Toaster />
       </body>
     </html>

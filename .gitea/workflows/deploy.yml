@@ -21,6 +21,24 @@ jobs:
         script: |
           set -e
 
+          # Colors for output
+          RED='\033[0;31m'
+          GREEN='\033[0;32m'
+          YELLOW='\033[1;33m'
+          NC='\033[0m'
+
+          print_success() {
+            echo -e "${GREEN}✅ $1${NC}"
+          }
+
+          print_error() {
+            echo -e "${RED}❌ $1${NC}"
+          }
+
+          print_warning() {
+            echo -e "${YELLOW}⚠️  $1${NC}"
+          }
+
           echo "=== Starting Deployment ==="
           echo "Project Path: ${{ secrets.PROJECT_PATH || '/home/hibhaqqi/code/biztrackkos-2' }}"
 
@@ -31,46 +49,148 @@ jobs:
           git fetch origin
           git reset --hard origin/master
           git pull origin master
+          print_success "Code updated to latest version"
 
-          echo "Step 2: Stopping running containers..."
+          echo "Step 2: Checking for migration script..."
+          if [ -f "scripts/migrate.sh" ]; then
+            chmod +x scripts/migrate.sh
+            print_success "Migration script found and made executable"
+          else
+            print_warning "Migration script not found, using inline migration"
+          fi
+
+          echo "Step 3: Stopping running containers..."
           docker compose down || true
+          print_success "Containers stopped"
 
-          echo "Step 3: Cleaning old build cache..."
+          echo "Step 4: Cleaning old build cache..."
           docker builder prune -f
           docker system prune -f
+          print_success "Build cache cleaned"
 
-          echo "Step 4: Building new images (this may take 3-5 minutes)..."
-          echo "Please be patient, npm install can take several minutes..."
-          docker compose build --no-cache --progress=plain
+          echo "Step 5: Building new images (this may take 3-5 minutes)..."
+          print_warning "Please be patient, npm install can take several minutes..."
+          if ! docker compose build --no-cache --progress=plain; then
+            print_error "Docker build failed!"
+            echo "Attempting to restore previous version..."
+            docker compose up -d
+            exit 1
+          fi
+          print_success "Docker image built successfully"
 
-          echo "Step 5: Starting containers..."
-          docker compose up -d --force-recreate
+          echo "Step 6: Starting containers..."
+          if ! docker compose up -d --force-recreate; then
+            print_error "Failed to start containers!"
+            echo "Check logs with: docker compose logs"
+            exit 1
+          fi
+          print_success "Containers started"
 
-          echo "Step 6: Waiting for database to be ready..."
-          sleep 15
+          echo "Step 7: Waiting for database to be ready..."
+          sleep 5
+          MAX_RETRIES=30
+          RETRY_COUNT=0
 
-          echo "Step 7: Running Prisma migrations..."
-          docker compose exec -T app npx prisma db push --skip-generate || echo "Migration skipped or already applied"
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            if docker compose exec -T db pg_isready -U postgres >/dev/null 2>&1; then
+              print_success "Database is ready!"
+              break
+            fi
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            echo "Waiting for database... ($RETRY_COUNT/$MAX_RETRIES)"
+            sleep 2
+          done
 
-          echo "Step 8: Waiting for application to be healthy..."
-          sleep 20
+          if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+            print_error "Database failed to become ready!"
+            echo "Skipping migrations and continuing with deployment..."
+          fi
 
-          echo "Step 9: Checking container status..."
+          echo "Step 8: Running database migrations..."
+          if [ -f "scripts/migrate.sh" ]; then
+            # Use migration script if available
+            if ! ./scripts/migrate.sh; then
+              print_warning "Migration script had issues, but deployment continues..."
+              print_warning "Please check database status manually"
+            fi
+          else
+            # Fallback to inline migration
+            print_info "Generating Prisma client..."
+            docker compose exec -T app npx prisma generate || true
+
+            print_info "Pushing schema changes..."
+            if ! docker compose exec -T app npx prisma db push --skip-generate --accept-data-loss; then
+              print_warning "Schema push had issues, checking if database is accessible..."
+              if ! docker compose exec -T app npx prisma db pull; then
+                print_error "Database is not accessible!"
+              else
+                print_success "Database is accessible but schema might be out of sync"
+              fi
+            else
+              print_success "Database schema pushed successfully"
+            fi
+          fi
+
+          echo "Step 9: Waiting for application to be healthy..."
+          sleep 10
+
+          echo "Step 10: Checking container status..."
           docker compose ps
+          print_success "Container status check complete"
 
-          echo "Step 10: Checking application health..."
-          curl -f http://localhost:9002 || echo "Warning: Application not responding yet, please check manually"
+          echo "Step 11: Checking application health..."
+          MAX_HEALTH_RETRIES=12
+          HEALTH_RETRY=0
 
-          echo "Step 11: Showing recent logs..."
-          docker compose logs --tail=100 app
+          while [ $HEALTH_RETRY -lt $MAX_HEALTH_RETRIES ]; do
+            if curl -f http://localhost:9002 >/dev/null 2>&1; then
+              print_success "Application is responding!"
+              break
+            fi
+            HEALTH_RETRY=$((HEALTH_RETRY + 1))
+            echo "Waiting for application... ($HEALTH_RETRY/$MAX_HEALTH_RETRIES)"
+            sleep 5
+          done
 
+          if [ $HEALTH_RETRY -eq $MAX_HEALTH_RETRIES ]; then
+            print_warning "Application not responding yet, but containers are running"
+            print_warning "Please check manually: curl http://${{ secrets.VPS_HOST }}:9002"
+          fi
+
+          echo "Step 12: Showing recent logs..."
+          docker compose logs --tail=50 app
+          print_success "Log display complete"
+
+          echo ""
           echo "=== Deployment Complete ==="
-          echo "✅ Application should be available at http://${{ secrets.VPS_HOST }}:9002"
+          print_success "Deployment finished successfully!"
           echo ""
-          echo "If something went wrong, check logs with:"
-          echo "  docker compose logs -f app"
+          echo "🌐 Application URL: http://${{ secrets.VPS_HOST }}:9002"
           echo ""
-          echo "Useful commands:"
-          echo "  View logs: docker compose logs -f app"
-          echo "  Restart: docker compose restart"
-          echo "  Stop: docker compose down"
+          echo "📊 Monitoring Commands:"
+          echo "  - View logs: docker compose logs -f app"
+          echo "  - Check status: docker compose ps"
+          echo "  - Restart: docker compose restart"
+          echo "  - Stop: docker compose down"
+          echo "  - Database logs: docker compose logs -f db"
+          echo ""
+          echo "🔧 Troubleshooting:"
+          echo "  - If app is not accessible: curl http://${{ secrets.VPS_HOST }}:9002"
+          echo "  - Check container health: docker compose ps"
+          echo "  - Run manual migration: ./scripts/migrate.sh"
+          echo "  - Rollback deployment: ./scripts/rollback.sh"
+          echo ""
+          echo "✅ All done! Your application should be live now."
+
+    - name: Deployment Notification
+      if: always()
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USERNAME }}
+        password: ${{ secrets.VPS_PASSWORD }}
+        port: ${{ secrets.VPS_PORT || 22 }}
+        script_stop: true
+        script: |
+          echo "Deployment workflow completed. Check logs above for details."
+

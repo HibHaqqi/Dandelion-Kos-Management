@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { useState, useTransition } from 'react';
 import { RoomFormDialog } from './room-form-dialog';
-import { deleteRoom } from '@/app/rooms/actions';
+import { deleteRoom } from '@/app/(dashboard)/rooms/actions';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';

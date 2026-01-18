@@ -9,12 +9,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useEffect, useTransition } from "react";
-import { addCustomer, updateCustomer } from "@/app/customers/actions";
+import { addCustomer, updateCustomer } from "@/app/(dashboard)/customers/actions";
 import { useToast } from "@/hooks/use-toast";
 
 const customerFormSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+  email: z.string().email("Invalid email address").optional().or(z.literal("")),
   phone: z.string().min(10, { message: "Phone number is required." }),
   nik: z.string().length(16, { message: "NIK must be 16 digits." }),
   entryDate: z.string().min(1, { message: "Entry date is required." }),
@@ -37,6 +38,7 @@ export function CustomerFormDialog({ isOpen, onOpenChange, customer }: CustomerF
     resolver: zodResolver(customerFormSchema),
     defaultValues: customer || {
       name: "",
+      email: "",
       phone: "",
       nik: "",
       entryDate: new Date().toISOString().split('T')[0],
@@ -48,9 +50,11 @@ export function CustomerFormDialog({ isOpen, onOpenChange, customer }: CustomerF
     if (isOpen) {
       const defaultValues = customer ? {
         ...customer,
-        roomNumber: customer.roomNumber || ''
+        roomNumber: customer.roomNumber || '',
+        email: customer.email || ''
        } : {
         name: "",
+        email: "",
         phone: "",
         nik: "",
         entryDate: new Date().toISOString().split('T')[0],
@@ -96,6 +100,19 @@ export function CustomerFormDialog({ isOpen, onOpenChange, customer }: CustomerF
                   <FormLabel>Name</FormLabel>
                   <FormControl>
                     <Input placeholder="John Doe" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email (Optional)</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="john@example.com" {...field} value={field.value ?? ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

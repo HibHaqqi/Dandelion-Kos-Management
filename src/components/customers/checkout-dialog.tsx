@@ -9,7 +9,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
-import { checkoutCustomer } from "@/app/customers/actions";
+import { checkoutCustomer } from "@/app/(dashboard)/customers/actions";
 
 interface CheckoutDialogProps {
   isOpen: boolean;

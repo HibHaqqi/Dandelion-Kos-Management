@@ -15,7 +15,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 const links = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/home", label: "Dashboard", icon: LayoutDashboard },
   { href: "/customers", label: "Customers", icon: Users },
   { href: "/transactions", label: "Transactions", icon: Receipt },
   { href: "/rooms", label: "Rooms", icon: Building },
@@ -30,7 +30,7 @@ export function SidebarNav() {
   return (
     <>
       <SidebarHeader className="p-4">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/home" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Building className="h-5 w-5" />
           </div>

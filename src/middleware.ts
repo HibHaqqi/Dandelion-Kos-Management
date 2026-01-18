@@ -7,12 +7,17 @@ export async function middleware(request: NextRequest) {
   const isLoggedIn = !!session;
 
   const { pathname } = request.nextUrl;
+  const hostname = request.headers.get('host') || '';
+
+  // Skip URL rewriting for now - route groups handle the routing
+  // Just add authentication headers and continue
 
   // Route categories
   const isApiRoute = pathname.startsWith('/api');
   const isTenantRegisterApi =
     pathname === '/api/tenant/register' ||
     pathname === '/api/tenant/register-auto'; // Allow auto-registration too
+  const isAuthApi = pathname.startsWith('/api/auth'); // Public auth API routes
   const isLoginPage = pathname === '/login';
   const isRegisterPage = pathname === '/register';
   const isTenantRegisterPage = pathname === '/tenant/register';
@@ -42,7 +47,7 @@ export async function middleware(request: NextRequest) {
   // API Routes
   if (isApiRoute) {
     // Public API routes (no authentication required)
-    if (isTenantRegisterApi) {
+    if (isTenantRegisterApi || isAuthApi) {
       return NextResponse.next({
         request: {
           headers: requestHeaders,
@@ -66,7 +71,7 @@ export async function middleware(request: NextRequest) {
 
     // Role-based API access
     if (isAdminRoute && session?.role !== 'ADMIN') {
-      return NextResponse('Forbidden: Admin access required', { status: 403 });
+      return new NextResponse('Forbidden: Admin access required', { status: 403 });
     }
 
     return NextResponse.next({
@@ -76,14 +81,15 @@ export async function middleware(request: NextRequest) {
     });
   }
 
-  // Public routes (login/register)
-  if (isLoginPage || isRegisterPage || isTenantRegisterPage) {
+  // Public routes (landing page, login, register)
+  const isLandingPage = pathname === '/';
+  if (isLandingPage || isLoginPage || isRegisterPage || isTenantRegisterPage) {
     if (isLoggedIn) {
       // Redirect based on role
       if (session.role === 'TENANT') {
         return NextResponse.redirect(new URL('/tenant/dashboard', request.url));
       } else {
-        return NextResponse.redirect(new URL('/', request.url));
+        return NextResponse.redirect(new URL('/home', request.url));
       }
     }
     return NextResponse.next({

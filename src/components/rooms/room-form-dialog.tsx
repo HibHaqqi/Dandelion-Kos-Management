@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useEffect, useTransition } from "react";
-import { addRoom, updateRoom } from "@/app/rooms/actions";
+import { addRoom, updateRoom } from "@/app/(dashboard)/rooms/actions";
 import { useToast } from "@/hooks/use-toast";
 import type { Room } from "@/types";
 
