@@ -43,9 +43,9 @@ COPY --from=builder /app/. ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
 
-# Create necessary directories
+# Create necessary directories with correct ownership
 RUN mkdir -p /app/public/uploads && \
-    chown -R node:node /app
+    chown -R node:node /app/public/uploads
 
 # Use non-root user for security
 USER node
