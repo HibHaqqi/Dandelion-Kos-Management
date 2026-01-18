@@ -9,8 +9,19 @@ if [ -n "$DATABASE_URL" ]; then
     MAX_RETRIES=30
     RETRY_COUNT=0
 
+    # Extract database host from DATABASE_URL
+    # Format: postgresql://user:password@host:port/database
+    DB_HOST=$(echo "$DATABASE_URL" | sed -n 's/.*@\([^:]*\):.*/\1/p')
+
+    # If we can't extract host, try common defaults
+    if [ -z "$DB_HOST" ]; then
+        DB_HOST="db"
+    fi
+
+    echo "Checking database host: $DB_HOST"
+
     while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-        if pg_isready -h db -U "$POSTGRES_USER" >/dev/null 2>&1; then
+        if pg_isready -h "$DB_HOST" >/dev/null 2>&1; then
             echo "✅ Database is ready!"
             break
         fi
@@ -27,10 +38,6 @@ if [ -n "$DATABASE_URL" ]; then
     echo "Running database migrations..."
     npx prisma db push --skip-generate --accept-data-loss || \
         echo "⚠️  Migration had issues, but continuing startup..."
-
-    # Generate Prisma client
-    echo "Generating Prisma client..."
-    npx prisma generate || echo "⚠️  Prisma generate failed, using existing client"
 fi
 
 echo "✅ Starting application..."
