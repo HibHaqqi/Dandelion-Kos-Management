@@ -47,6 +47,10 @@ COPY --from=builder /app/.next ./.next
 RUN mkdir -p /app/public/uploads && \
     chown -R node:node /app/public/uploads
 
+# Startup script (must be done before switching to non-root user)
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Use non-root user for security
 USER node
 
@@ -61,10 +65,6 @@ ENV NODE_ENV=production \
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:9002 || exit 1
-
-# Startup script
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["node", "server.js"]
