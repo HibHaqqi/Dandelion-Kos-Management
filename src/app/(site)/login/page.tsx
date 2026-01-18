@@ -175,7 +175,7 @@ export default function TenantLoginPage() {
             </div>
 
             <a
-              href="https://wa.me/6281234567890"
+              href="https://wa.me/6285848684908"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 w-full rounded-xl border-2 border-teal-400 text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 font-semibold py-3 transition"
