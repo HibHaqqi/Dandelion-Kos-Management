@@ -12,8 +12,7 @@ COPY package.json package-lock.json ./
 # Configure npm for reliability
 ENV NODE_OPTIONS=--max-old-space-size=4096
 RUN npm config set fetch-retries 10 && \
-    npm config set fetch-timeout 120000 && \
-    npm config set fetch-max-mb-timestamp 50
+    npm config set fetch-timeout 120000
 
 # Install dependencies with error handling
 RUN npm cache clean --force && \
