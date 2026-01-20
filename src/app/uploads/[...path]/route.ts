@@ -6,21 +6,23 @@ import { existsSync } from 'fs';
 /**
  * Legacy route for old uploaded files
  * Handles URLs like /uploads/filename.png
- * Redirects to /api/uploads/filename.png or serves file directly
+ * Serves file directly from /public/uploads/
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
-    const path = params.path.join('/');
+    const { path } = await params;
+    const pathStr = Array.isArray(path) ? path.join('/') : path;
 
     // Security check: prevent directory traversal
-    const normalizedPath = path.replace(/\.\./g, '');
+    const normalizedPath = pathStr.replace(/\.\./g, '');
     const filepath = join(process.cwd(), 'public', 'uploads', normalizedPath);
 
     // Check if file exists
     if (!existsSync(filepath)) {
+      console.error('File not found:', filepath);
       return NextResponse.json({ error: 'File not found' }, { status: 404 });
     }
 
