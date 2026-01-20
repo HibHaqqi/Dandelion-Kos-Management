@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getSession();
@@ -21,7 +21,14 @@ export async function DELETE(
       );
     }
 
-    const paymentId = params.id;
+    const { id: paymentId } = await params;
+
+    if (!paymentId) {
+      return NextResponse.json(
+        { error: 'Payment ID is required' },
+        { status: 400 }
+      );
+    }
 
     // Get the payment
     const payment = await prisma.transaction.findUnique({

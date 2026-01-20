@@ -4,7 +4,7 @@ import prisma from '@/lib/db';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getSession();
@@ -13,8 +13,16 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id: complaintId } = await params;
     const body = await request.json();
     const { status, adminReply } = body;
+
+    if (!complaintId) {
+      return NextResponse.json(
+        { error: 'Complaint ID is required' },
+        { status: 400 }
+      );
+    }
 
     const validStatuses = ['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'];
 
@@ -27,7 +35,7 @@ export async function PATCH(
 
     // Update complaint
     const complaint = await prisma.complaint.update({
-      where: { id: params.id },
+      where: { id: complaintId },
       data: {
         status,
         adminReply: adminReply || null,
