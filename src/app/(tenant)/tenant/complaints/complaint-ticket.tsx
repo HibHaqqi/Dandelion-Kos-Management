@@ -2,9 +2,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MessageSquare, Image as ImageIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Calendar, MessageSquare, Image as ImageIcon, Trash2, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { ImageModal } from '@/components/ui/image-modal';
+import { useToast } from '@/hooks/use-toast';
 
 interface ComplaintTicketProps {
   complaint: {
@@ -22,6 +24,8 @@ interface ComplaintTicketProps {
 
 export function ComplaintTicket({ complaint }: ComplaintTicketProps) {
   const [modalImage, setModalImage] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { toast } = useToast();
 
   const categoryIcons: Record<string, string> = {
     ELECTRICITY: '⚡',
@@ -37,6 +41,40 @@ export function ComplaintTicket({ complaint }: ComplaintTicketProps) {
     IN_PROGRESS: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
     RESOLVED: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
     CLOSED: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+  };
+
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this complaint? This action cannot be undone.')) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/tenant/complaints/${complaint.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete complaint');
+      }
+
+      toast({
+        title: 'Complaint deleted',
+        description: 'Your complaint has been removed',
+      });
+
+      // Refresh the page to show updated data
+      window.location.reload();
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Delete failed',
+        description: error.message || 'Please try again',
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -98,6 +136,29 @@ export function ComplaintTicket({ complaint }: ComplaintTicketProps) {
               Last updated:{' '}
               {new Date(complaint.updatedAt).toLocaleDateString('id-ID')}
             </p>
+          )}
+
+          {/* Delete button - only for OPEN complaints */}
+          {complaint.status === 'OPEN' && (
+            <Button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              variant="destructive"
+              size="sm"
+              className="w-full mt-2"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Complaint
+                </>
+              )}
+            </Button>
           )}
         </CardContent>
       </Card>

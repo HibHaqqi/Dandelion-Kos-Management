@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Image as ImageIcon, User } from 'lucide-react';
+import { Loader2, Image as ImageIcon, User, Trash2 } from 'lucide-react';
 import { ImageModal } from '@/components/ui/image-modal';
 
 interface ComplaintCardProps {
@@ -45,6 +45,7 @@ interface ComplaintCardProps {
 export function ComplaintCard({ complaint }: ComplaintCardProps) {
   const { toast } = useToast();
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [modalImage, setModalImage] = useState<string | null>(null);
   const [status, setStatus] = useState(complaint.status);
@@ -95,6 +96,39 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
       });
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this complaint? This action cannot be undone.')) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/admin/complaints/${complaint.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete complaint');
+      }
+
+      toast({
+        title: 'Complaint deleted',
+        description: 'The complaint has been removed',
+      });
+
+      // Refresh the page to show updated data
+      window.location.reload();
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Delete failed',
+        description: 'Please try again',
+      });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -210,13 +244,32 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
             ) : (
               <p className="text-sm text-gray-500 italic">No response yet</p>
             )}
-            <Button
-              className="mt-3"
-              onClick={() => setIsEditing(true)}
-              variant="outline"
-            >
-              Update Status / Reply
-            </Button>
+            <div className="flex gap-2 mt-3">
+              <Button
+                onClick={() => setIsEditing(true)}
+                variant="outline"
+                className="flex-1"
+              >
+                Update Status / Reply
+              </Button>
+              <Button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                variant="destructive"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>
