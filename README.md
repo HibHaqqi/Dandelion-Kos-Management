@@ -110,6 +110,12 @@
 - Optional API key authentication for webhooks
 - Multi-tenant data isolation
 
+### Tenant Portal Features
+- **Payment Submission** with receipt upload
+- **Complaint System** with optional image proof
+- Room and payment history viewing
+- User-friendly interface for tenants
+
 ---
 
 ## 🛠 Tech Stack
@@ -130,6 +136,7 @@
 - **Database ORM**: [Prisma 6.11](https://www.prisma.io/)
 - **Database**: PostgreSQL 15
 - **Authentication**: bcrypt + cookie-based sessions
+- **File Storage**: Local file system with Docker volume persistence
 
 ### DevOps
 - **Containerization**: Docker + Docker Compose
@@ -326,6 +333,7 @@ docker-compose logs -f
 - [ ] Set up database backups
 - [ ] Configure environment variables
 - [ ] Review security settings
+- [ ] Ensure proper file permissions for uploads directory
 
 ---
 
