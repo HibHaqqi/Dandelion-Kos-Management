@@ -6,7 +6,7 @@ RUN apk add --no-cache openssl postgresql-client curl
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files FIRST (better layer caching)
 COPY package.json package-lock.json ./
 
 # Configure npm for reliability
@@ -14,34 +14,39 @@ ENV NODE_OPTIONS=--max-old-space-size=4096
 RUN npm config set fetch-retries 10 && \
     npm config set fetch-timeout 120000
 
-# Install dependencies with error handling (skip postinstall to avoid prisma generate before schema is copied)
+# Install dependencies (cached if package.json unchanged)
 RUN npm cache clean --force && \
     npm install --legacy-peer-deps --no-audit --no-fund --ignore-scripts || \
     (echo "First attempt failed, retrying..." && \
      npm cache clean --force && \
      npm install --legacy-peer-deps --no-audit --no-fund --ignore-scripts)
 
-# Copy application files
-COPY . .
+# Copy ONLY prisma schema before other files (better caching)
+COPY prisma ./prisma/
 
-# Generate Prisma client
+# Generate Prisma client (cached if schema unchanged)
 RUN npx prisma generate
 
-# Build application
+# Copy application files LAST (this invalidates cache if any source changes)
+COPY . .
+
+# Build application (only runs if source files changed)
 RUN npm run build
 
 # Production stage
 FROM node:20-alpine AS production
 
 # Install runtime dependencies only
-RUN apk add --no-cache --no-cache openssl postgresql-client curl dumb-init
+RUN apk add --no-cache openssl postgresql-client curl dumb-init
 
 WORKDIR /app
 
 # Copy built application from builder
-COPY --from=builder /app/. ./
-COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/package.json ./package.json
 
 # Create necessary directories with correct ownership
 RUN mkdir -p /app/public/uploads && \
