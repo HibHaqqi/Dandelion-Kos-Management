@@ -50,8 +50,8 @@ export async function uploadImage(
     const filepath = join(uploadDir, filename);
     await writeFile(filepath, buffer);
 
-    // Return public URL
-    const url = `/${folder}/${filename}`;
+    // Return API route URL for dynamic file serving
+    const url = `/api/${folder}/${filename}`;
 
     return {
       success: true,
