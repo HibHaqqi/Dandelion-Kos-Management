@@ -6,6 +6,16 @@ import { Toaster } from '@/components/ui/toaster';
 export const metadata: Metadata = {
   title: 'Dandelion Kos | Digital Living Experience',
   description: 'Premium boarding with modern management system',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 5,
+    userScalable: true,
+  },
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#FFB800' },
+    { media: '(prefers-color-scheme: dark)', color: '#FFB800' },
+  ],
   icons: {
     icon: [
       { url: '/icon.svg', type: 'image/svg+xml' },

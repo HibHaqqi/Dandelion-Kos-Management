@@ -52,7 +52,7 @@ export default function TenantLoginPage() {
         <div
           className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-105"
           style={{
-            backgroundImage: `url('https://lh3.googleusercontent.com/aida-public/AB6AXuDJfI7ndUe39CON0V1FkncyHeao_kzlFaYlM_LaL3sb90ETcIrw-SJJFjRIaU8fFHo2R6hIFjFBJnvZfe39-G0xng9l0dGRpkJC4xrPXn1TDrkR-8ZQ5w6qXAEw5G-ZltFza32nE18e9Nj_QPyrKvyfD2A7gBocrxc3uFUm5w5dEFbDo2bbqaEA0FM35t30bYFX73Dlp2y-Szmxs35hZzqBYW5-47q_GJxx38vs2pmKFhuUCwCMMjaGNHMoaT5YWLhc6Gyq0TeNtk8')`,
+            backgroundImage: `url('/kos.jpeg')`,
           }}
         ></div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>

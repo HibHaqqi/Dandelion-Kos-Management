@@ -5,13 +5,22 @@ import { useEffect, useState } from 'react';
 
 export default function LandingPage() {
   const [isDark, setIsDark] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     if (typeof window !== 'undefined') {
-      const dark = localStorage.getItem('dark') === 'true';
+      // Check localStorage first, then system preference
+      const storedDark = localStorage.getItem('dark');
+      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+      const dark = storedDark ? storedDark === 'true' : systemDark;
       setIsDark(dark);
+
       if (dark) {
         document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
       }
     }
   }, []);
@@ -28,6 +37,11 @@ export default function LandingPage() {
       }
     }
   };
+
+  // Prevent flash of wrong mode
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <>
@@ -83,8 +97,9 @@ export default function LandingPage() {
               </div>
               <div className="flex items-center space-x-4">
                 <button
-                  className="p-2.5 rounded-xl bg-orange-50 dark:bg-zinc-800 text-primary hover:bg-orange-100 transition-colors"
+                  className="p-2.5 rounded-xl bg-orange-100 dark:bg-zinc-800 text-primary hover:bg-orange-200 dark:hover:bg-zinc-700 transition-all hover:scale-105 active:scale-95"
                   onClick={toggleDark}
+                  aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
                 >
                   <span className="material-symbols-outlined block dark:hidden">dark_mode</span>
                   <span className="material-symbols-outlined hidden dark:block">light_mode</span>
@@ -109,11 +124,11 @@ export default function LandingPage() {
                   <span className="w-2 h-2 rounded-full bg-primary mr-2 animate-pulse"></span>
                   Modern Living in Tuban
                 </span>
-                <h1 className="text-5xl lg:text-7xl font-extrabold text-secondary dark:text-white leading-[1.1] mb-8">
+                <h1 className="text-5xl lg:text-7xl font-extrabold text-slate-900 dark:text-white leading-[1.1] mb-8">
                   Digital Living at <br />
-                  <span className="gradient-text">Dandelion Kos</span>
+                  <span className="text-primary dark:text-primary">Dandelion Kos</span>
                 </h1>
-                <p className="text-xl text-slate-600 dark:text-slate-400 mb-10 leading-relaxed max-w-lg font-medium">
+                <p className="text-xl text-slate-700 dark:text-slate-300 mb-10 leading-relaxed max-w-lg font-medium">
                   Experience the next generation of premium boarding. Seamless management, instant access,
                   and high-tech amenities.
                 </p>
@@ -121,31 +136,31 @@ export default function LandingPage() {
                   <button className="bg-primary hover:bg-primary-dark text-secondary px-10 py-5 rounded-2xl font-bold flex items-center shadow-xl shadow-primary/30 transition-all transform hover:-translate-y-1">
                     Explore Features <span className="material-symbols-outlined ml-2">expand_more</span>
                   </button>
-                  <button className="bg-white dark:bg-zinc-800 text-secondary dark:text-white border-2 border-orange-50 dark:border-zinc-700 px-10 py-5 rounded-2xl font-bold hover:bg-orange-50 dark:hover:bg-zinc-700 transition-all">
+                  <button className="bg-white dark:bg-zinc-800 text-slate-900 dark:text-white border-2 border-orange-50 dark:border-zinc-700 px-10 py-5 rounded-2xl font-bold hover:bg-orange-50 dark:hover:bg-zinc-700 transition-all">
                     View Gallery
                   </button>
                 </div>
               </div>
               <div className="relative">
-                <div className="rounded-[2.5rem] overflow-hidden shadow-2xl transform lg:rotate-2 hover:rotate-0 transition-transform duration-700 border-[12px] border-white dark:border-zinc-800 relative z-10">
+                <div className="rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden shadow-2xl transform hover:scale-[1.02] transition-transform duration-500 border-[6px] sm:border-[12px] border-white dark:border-zinc-800 relative z-10">
                   <img
                     alt="Dandelion Kos Building Architecture"
-                    className="w-full h-[540px] object-cover"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgLdQOKyI0shehuqARzhmcyLCP_b8cnB-Pqp5ni0pFeFYoGx66WuM_mf0hUmCBIq3z7tej9K0DY_kHyeCbnaKSWHHDZ2ltQce19sfxLU5lBS5mz6aCdnzZi2CpG2o1SXwcYC_1her_YM6AP-c2oQGcirWovbS8c3nNl49HqmI6VFB-NmoNP0Yf7j96VDnWtrEoYGbZjEEoGMOqXWbd6hbpoMk257DQuDWJ9-HWw1WUliAZTLOI5YjVUCDrj7SOoR_UHOcoGVm2NHc"
+                    src="/building.jpg"
+                    className="w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[540px] object-cover object-center"
                   />
                 </div>
-                <div className="absolute -bottom-10 -right-10 w-64 h-64 bg-primary/20 rounded-full blur-3xl -z-0"></div>
-                <div className="absolute -bottom-8 -left-8 bg-white dark:bg-zinc-800 p-6 rounded-3xl shadow-2xl border border-orange-50 dark:border-zinc-700 max-w-xs hidden md:block z-20">
-                  <div className="flex items-center space-x-4 mb-4">
-                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary-dark">
-                      <span className="material-symbols-outlined font-bold">bolt</span>
+                <div className="absolute -bottom-6 -right-6 sm:-bottom-10 sm:-right-10 w-48 h-48 sm:w-64 sm:h-64 bg-primary/20 rounded-full blur-3xl -z-0"></div>
+                <div className="absolute -bottom-4 -right-4 sm:-bottom-8 sm:-left-8 bg-white dark:bg-zinc-800 p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-2xl border border-orange-50 dark:border-zinc-700 max-w-[200px] sm:max-w-xs z-20">
+                  <div className="flex items-center space-x-3 sm:space-x-4 mb-3 sm:mb-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-primary/10 flex items-center justify-center text-primary-dark flex-shrink-0">
+                      <span className="material-symbols-outlined text-lg sm:text-xl font-bold">bolt</span>
                     </div>
-                    <div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Electricity</p>
-                      <p className="text-sm font-bold dark:text-white">Token Refilled</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">Electricity</p>
+                      <p className="text-xs sm:text-sm font-bold dark:text-white truncate">Token Refilled</p>
                     </div>
                   </div>
-                  <div className="bg-orange-50 dark:bg-zinc-900/50 p-3 rounded-xl text-center font-mono text-primary-dark dark:text-primary font-black text-lg tracking-wider">
+                  <div className="bg-orange-50 dark:bg-zinc-900/50 p-2 sm:p-3 rounded-xl text-center font-mono text-primary-dark dark:text-primary font-black text-sm sm:text-lg tracking-wider">
                     4521 8892 0012
                   </div>
                 </div>
@@ -238,85 +253,107 @@ export default function LandingPage() {
         </section>
 
         {/* Digital Perks Section */}
-        <section className="py-24 overflow-hidden" id="digital-perks">
+        <section className="py-16 sm:py-24 overflow-hidden" id="digital-perks">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="bg-secondary dark:bg-zinc-900 rounded-[3.5rem] p-10 md:p-20 lg:flex items-center text-white relative border-t-4 border-primary">
-              <div className="lg:w-1/2 relative z-10 mb-16 lg:mb-0">
-                <div className="inline-flex items-center py-1.5 px-4 rounded-full bg-white/10 text-primary text-xs font-black tracking-widest uppercase mb-8 border border-white/10">
+            <div className="bg-secondary dark:bg-zinc-900 rounded-[2.5rem] sm:rounded-[3.5rem] p-6 sm:p-10 md:p-20 text-white relative border-t-4 border-primary">
+              <div className="text-center mb-10 md:mb-16">
+                <div className="inline-flex items-center py-1.5 px-4 rounded-full bg-white/10 text-primary text-xs font-black tracking-widest uppercase mb-6 border border-white/10">
                   Exclusive Resident Perk
                 </div>
-                <h2 className="text-4xl md:text-5xl font-extrabold mb-8 leading-tight">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-6 leading-tight">
                   High-Speed Entertainment:<br />
                   <span className="text-primary">Jellyfin & Plex</span>
                 </h2>
-                <p className="text-zinc-400 text-xl mb-12 leading-relaxed">
+                <p className="text-zinc-400 text-base sm:text-lg md:text-xl max-w-3xl mx-auto leading-relaxed">
                   We host local media servers on-site. Enjoy buffer-free streaming of your favorite content across the
                   entire building.
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div className="bg-white/5 p-6 rounded-3xl border border-white/10 backdrop-blur-md">
-                    <div className="flex items-center mb-4">
-                      <span className="material-symbols-outlined mr-3 text-primary">play_circle</span>
-                      <span className="font-bold text-lg">Local Streaming</span>
+              </div>
+
+              <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+                {/* Feature Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
+                  <div className="bg-primary/20 p-5 sm:p-6 rounded-3xl border-2 border-primary/30 backdrop-blur-md hover:bg-primary/30 transition-colors">
+                    <div className="flex items-center mb-3 sm:mb-4">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary rounded-xl flex items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+                        <span className="material-symbols-outlined text-secondary text-xl sm:text-2xl">play_circle</span>
+                      </div>
+                      <span className="font-bold text-base sm:text-lg text-white">Local Streaming</span>
                     </div>
-                    <p className="text-sm text-zinc-500">Zero internet lag. Hosted right in the building for peak speed.</p>
+                    <p className="text-sm text-white/90 leading-relaxed">Zero internet lag. Hosted right in the building for peak speed.</p>
                   </div>
-                  <div className="bg-white/5 p-6 rounded-3xl border border-white/10 backdrop-blur-md">
-                    <div className="flex items-center mb-4">
-                      <span className="material-symbols-outlined mr-3 text-primary">devices</span>
+
+                  <div className="bg-primary/20 p-5 sm:p-6 rounded-3xl border-2 border-primary/30 backdrop-blur-md hover:bg-primary/30 transition-colors">
+                    <div className="flex items-center mb-3 sm:mb-4">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary rounded-xl flex items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+                        <span className="material-symbols-outlined text-secondary text-xl sm:text-2xl">devices</span>
+                      </div>
+                      <span className="font-bold text-base sm:text-lg text-white">Multi-Device</span>
                     </div>
-                    <span className="font-bold text-lg">Multi-Device</span>
-                    <p className="text-sm text-zinc-500 mt-2">Watch on your phone, laptop, or smart TV effortlessly.</p>
+                    <p className="text-sm text-white/90 leading-relaxed mt-1">Watch on your phone, laptop, or smart TV effortlessly.</p>
+                  </div>
+
+                  <div className="bg-primary/20 p-5 sm:p-6 rounded-3xl border-2 border-primary/30 backdrop-blur-md hover:bg-primary/30 transition-colors sm:col-span-2">
+                    <div className="flex items-center mb-3 sm:mb-4">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary rounded-xl flex items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+                        <span className="material-symbols-outlined text-secondary text-xl sm:text-2xl">wifi</span>
+                      </div>
+                      <span className="font-bold text-base sm:text-lg text-white">Lightning Fast Network</span>
+                    </div>
+                    <p className="text-sm text-white/90 leading-relaxed mt-1">Local servers mean consistent speeds regardless of internet traffic.</p>
+                  </div>
+                </div>
+
+                {/* Local Server Network Card */}
+                <div className="relative">
+                  <div className="bg-white dark:bg-[#1A1A1A] rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 shadow-2xl text-secondary dark:text-white border-l-4 sm:border-l-[12px] border-primary">
+                    <p className="text-[10px] sm:text-xs font-black text-slate-400 mb-4 sm:mb-6 uppercase tracking-[0.15em] sm:tracking-[0.2em]">Local Server Network</p>
+                    <div className="space-y-4 sm:space-y-5">
+                      <div className="p-4 sm:p-5 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-800/50 rounded-2xl flex items-center justify-between group cursor-pointer hover:bg-emerald-100 transition-colors">
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white dark:bg-zinc-800 rounded-xl flex items-center justify-center mr-3 sm:mr-4 sm:mr-5 shadow-sm flex-shrink-0">
+                            <span className="material-symbols-outlined text-primary text-xl sm:text-2xl">movie</span>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-bold text-base sm:text-lg truncate">Jellyfin</p>
+                            <div className="flex items-center mt-1">
+                              <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2 flex-shrink-0"></span>
+                              <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold tracking-tight">
+                                ONLINE • 24ms latency
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors flex-shrink-0">
+                          arrow_forward
+                        </span>
+                      </div>
+                      <div className="p-4 sm:p-5 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-800/50 rounded-2xl flex items-center justify-between group cursor-pointer hover:bg-emerald-100 transition-colors">
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white dark:bg-zinc-800 rounded-xl flex items-center justify-center mr-3 sm:mr-4 sm:mr-5 shadow-sm flex-shrink-0">
+                            <span className="material-symbols-outlined text-primary text-xl sm:text-2xl">play_circle</span>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-bold text-base sm:text-lg truncate">Plex Media</p>
+                            <div className="flex items-center mt-1">
+                              <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2 flex-shrink-0"></span>
+                              <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold tracking-tight">
+                                ONLINE • 12ms latency
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors flex-shrink-0">
+                          arrow_forward
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div className="lg:w-1/2 lg:pl-16 relative">
-                <div className="bg-white dark:bg-[#1A1A1A] rounded-[2.5rem] p-8 shadow-2xl text-secondary dark:text-white transform lg:scale-110 lg:translate-x-12 border-l-[12px] border-primary">
-                  <p className="text-xs font-black text-slate-400 mb-6 uppercase tracking-[0.2em]">Local Server Network</p>
-                  <div className="space-y-5">
-                    <div className="p-5 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-800/50 rounded-2xl flex items-center justify-between group cursor-pointer hover:bg-emerald-100 transition-colors">
-                      <div className="flex items-center">
-                        <div className="w-12 h-12 bg-white dark:bg-zinc-800 rounded-xl flex items-center justify-center mr-5 shadow-sm">
-                          <span className="material-symbols-outlined text-primary text-2xl">movie</span>
-                        </div>
-                        <div>
-                          <p className="font-bold text-lg">Jellyfin</p>
-                          <div className="flex items-center mt-1">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>
-                            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold tracking-tight">
-                              ONLINE • 24ms latency
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors">
-                        arrow_forward
-                      </span>
-                    </div>
-                    <div className="p-5 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-800/50 rounded-2xl flex items-center justify-between group cursor-pointer hover:bg-emerald-100 transition-colors">
-                      <div className="flex items-center">
-                        <div className="w-12 h-12 bg-white dark:bg-zinc-800 rounded-xl flex items-center justify-center mr-5 shadow-sm">
-                          <span className="material-symbols-outlined text-primary text-2xl">theaters</span>
-                        </div>
-                        <div>
-                          <p className="font-bold text-lg">Plex Media</p>
-                          <div className="flex items-center mt-1">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>
-                            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold tracking-tight">
-                              ONLINE • 12ms latency
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors">
-                        arrow_forward
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="absolute bottom-10 right-10 opacity-5 pointer-events-none">
-                <span className="material-symbols-outlined text-[240px]">rss_feed</span>
+
+              <div className="absolute bottom-6 sm:bottom-10 right-6 sm:right-10 opacity-5 pointer-events-none">
+                <span className="material-symbols-outlined text-[120px] sm:text-[240px]">rss_feed</span>
               </div>
             </div>
           </div>
@@ -390,18 +427,18 @@ export default function LandingPage() {
                         Hello, Resident! 👋
                       </h3>
                     </div>
-                    <div className="grid grid-cols-3 gap-6">
-                      <div className="p-6 rounded-3xl bg-brand-bg dark:bg-zinc-800/50 border border-orange-100 dark:border-zinc-700">
-                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Room</p>
-                        <p className="text-3xl font-black text-secondary dark:text-white">205</p>
+                    <div className="grid grid-cols-3 gap-3 sm:gap-6">
+                      <div className="p-3 sm:p-6 rounded-3xl bg-brand-bg dark:bg-zinc-800/50 border border-orange-100 dark:border-zinc-700">
+                        <p className="text-[9px] sm:text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1.5 sm:mb-3">Room</p>
+                        <p className="text-xl sm:text-3xl font-black text-secondary dark:text-white leading-none sm:leading-tight">205</p>
                       </div>
-                      <div className="p-6 rounded-3xl bg-brand-bg dark:bg-zinc-800/50 border border-orange-100 dark:border-zinc-700">
-                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Payments</p>
-                        <p className="text-3xl font-black text-secondary dark:text-white">Active</p>
+                      <div className="p-3 sm:p-6 rounded-3xl bg-brand-bg dark:bg-zinc-800/50 border border-orange-100 dark:border-zinc-700">
+                        <p className="text-[9px] sm:text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1.5 sm:mb-3">Payments</p>
+                        <p className="text-base sm:text-3xl font-black text-secondary dark:text-white leading-none sm:leading-tight">Active</p>
                       </div>
-                      <div className="p-6 rounded-3xl bg-primary/10 border border-primary/20">
-                        <p className="text-[10px] text-primary-dark font-black uppercase tracking-widest mb-3">Status</p>
-                        <p className="text-3xl font-black text-primary-dark">Verified</p>
+                      <div className="p-3 sm:p-6 rounded-3xl bg-primary/10 border border-primary/20">
+                        <p className="text-[9px] sm:text-[10px] text-primary-dark font-black uppercase tracking-widest mb-1.5 sm:mb-3">Status</p>
+                        <p className="text-base sm:text-3xl font-black text-primary-dark leading-none sm:leading-tight">Verified</p>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">

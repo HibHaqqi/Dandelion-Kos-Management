@@ -16,7 +16,14 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
+    unoptimized: true,
   },
   // Enable standalone output for Docker deployment
   output: 'standalone',
