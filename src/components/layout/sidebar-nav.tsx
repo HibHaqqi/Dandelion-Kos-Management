@@ -13,6 +13,7 @@ import {
   SidebarContent,
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
+import { useSidebar } from "@/components/ui/sidebar";
 
 const links = [
   { href: "/home", label: "Dashboard", icon: LayoutDashboard },
@@ -26,11 +27,18 @@ const links = [
 
 export function SidebarNav() {
   const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   return (
     <>
       <SidebarHeader className="p-4">
-        <Link href="/home" className="flex items-center gap-2">
+        <Link href="/home" className="flex items-center gap-2" onClick={handleLinkClick}>
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Building className="h-5 w-5" />
           </div>
@@ -48,7 +56,7 @@ export function SidebarNav() {
                 isActive={pathname === link.href}
                 className="w-full justify-start"
               >
-                <Link href={link.href}>
+                <Link href={link.href} onClick={handleLinkClick}>
                   <link.icon className="h-4 w-4" />
                   <span>{link.label}</span>
                   {link.href === '/admin/complaints' && link.showBadge && <ComplaintsBadge />}

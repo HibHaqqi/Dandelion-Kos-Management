@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
+import { DebugDialogCheck } from '@/components/debug-dialog-check';
 
 export const metadata: Metadata = {
   title: 'Dandelion Kos | Digital Living Experience',
@@ -55,6 +56,7 @@ export default function RootLayout({
       <body className={cn('font-body antialiased')}>
         {children}
         <Toaster />
+        <DebugDialogCheck />
       </body>
     </html>
   );
