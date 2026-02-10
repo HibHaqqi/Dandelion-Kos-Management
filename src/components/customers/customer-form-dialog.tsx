@@ -84,16 +84,13 @@ export function CustomerFormDialog({ isOpen, onOpenChange, customer }: CustomerF
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      console.log('Dialog onOpenChange called:', open);
-      onOpenChange(open);
-    }}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       {isOpen && (
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{customer ? "Edit Customer" : "Add New Customer"}</DialogTitle>
             <DialogDescription>
-              {customer ? "Update the customer's details." : "Fill in the details for the new customer."}
+              {customer ? "Update the customer details." : "Fill in the details for the new customer."}
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>

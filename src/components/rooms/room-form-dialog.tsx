@@ -64,34 +64,36 @@ export function RoomFormDialog({ isOpen, onOpenChange, room }: RoomFormDialogPro
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{room ? 'Edit Room' : 'Add New Room'}</DialogTitle>
-          <DialogDescription>
-            Enter the room number below.
-          </DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
-            <FormField
-              control={form.control}
-              name="roomNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Room Number</FormLabel>
-                  <FormControl><Input placeholder="e.g. 101" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? "Saving..." : (room ? "Save Changes" : "Save Room")}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
+      {isOpen && (
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{room ? 'Edit Room' : 'Add New Room'}</DialogTitle>
+            <DialogDescription>
+              Enter the room number below.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+              <FormField
+                control={form.control}
+                name="roomNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Room Number</FormLabel>
+                    <FormControl><Input placeholder="e.g. 101" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button type="submit" disabled={isPending}>
+                  {isPending ? "Saving..." : (room ? "Save Changes" : "Save Room")}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      )}
     </Dialog>
   );
 }

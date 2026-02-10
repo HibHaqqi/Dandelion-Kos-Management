@@ -39,48 +39,50 @@ export function CheckoutDialog({ isOpen, onOpenChange, customer }: CheckoutDialo
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Checkout Customer</DialogTitle>
-          <DialogDescription>
-            Checkout {customer?.name} from room {customer?.roomNumber}. This will mark their checkout date and free up the room.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="checkout-date">Checkout Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={`w-full justify-start text-left font-normal ${
-                    !checkoutDate && "text-muted-foreground"
-                  }`}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {checkoutDate ? format(checkoutDate, "PPP") : "Pick a date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={checkoutDate}
-                  onSelect={(date) => date && setCheckoutDate(date)}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+      {isOpen && (
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Checkout Customer</DialogTitle>
+            <DialogDescription>
+              Checkout {customer?.name} from room {customer?.roomNumber}. This will mark their checkout date and free up the room.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="checkout-date">Checkout Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={`w-full justify-start text-left font-normal ${
+                      !checkoutDate && "text-muted-foreground"
+                    }`}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {checkoutDate ? format(checkoutDate, "PPP") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={checkoutDate}
+                    onSelect={(date) => date && setCheckoutDate(date)}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
-            Cancel
-          </Button>
-          <Button onClick={handleCheckout} disabled={isPending}>
-            {isPending ? "Processing..." : "Checkout"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
+              Cancel
+            </Button>
+            <Button onClick={handleCheckout} disabled={isPending}>
+              {isPending ? "Processing..." : "Checkout"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      )}
     </Dialog>
   );
 }

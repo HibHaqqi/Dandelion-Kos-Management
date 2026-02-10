@@ -103,7 +103,8 @@ export function PaymentVerificationDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      {isOpen && (
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Verify Payment</DialogTitle>
           <DialogDescription>
@@ -227,6 +228,7 @@ export function PaymentVerificationDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+      )}
     </Dialog>
   );
 }

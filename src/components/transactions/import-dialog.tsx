@@ -115,7 +115,8 @@ export function ImportDialog({ isOpen, onOpenChange, onImportComplete }: ImportD
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      {isOpen && (
+        <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileSpreadsheet className="h-5 w-5" />
@@ -220,6 +221,7 @@ export function ImportDialog({ isOpen, onOpenChange, onImportComplete }: ImportD
           </Button>
         </DialogFooter>
       </DialogContent>
+      )}
     </Dialog>
   );
 }

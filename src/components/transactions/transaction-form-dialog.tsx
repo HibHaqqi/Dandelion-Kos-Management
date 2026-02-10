@@ -129,7 +129,8 @@ export function TransactionFormDialog({ isOpen, onOpenChange, transaction, rooms
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      {isOpen && (
+        <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{transaction ? 'Edit Transaction' : 'Add New Transaction'}</DialogTitle>
           <DialogDescription>
@@ -313,6 +314,7 @@ export function TransactionFormDialog({ isOpen, onOpenChange, transaction, rooms
           </form>
         </Form>
       </DialogContent>
+      )}
     </Dialog>
   );
 }
