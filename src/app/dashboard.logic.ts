@@ -78,11 +78,12 @@ export async function getDashboardData(dateFilter?: DateFilterValue) {
     .map((t) => ({ ...t, date: new Date(t.date).toISOString().split('T')[0] }));
     
   const recentCustomers = [...customers]
+    .filter((c) => !c.checkoutDate) // Only show active customers (not checked out)
     .sort((a, b) => new Date(a.entryDate).getTime() - new Date(b.entryDate).getTime())
     .slice(0, 5)
     .map((c) => ({ ...c, entryDate: new Date(c.entryDate).toISOString().split('T')[0] }));
 
-  const customersCount = customers.length;
+  const customersCount = customers.filter((c) => !c.checkoutDate).length; // Count only active customers
 
   // Prepare chart data
   const incomeVsExpenseData = prepareIncomeVsExpenseData(transactions, dateFilter);

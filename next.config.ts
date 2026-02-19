@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   },
   eslint: {
     ignoreDuringBuilds: true,
-  },
+  } as any, // Type assertion for Next.js 16 compatibility
   images: {
     remotePatterns: [
       {
@@ -16,8 +16,17 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
+    unoptimized: true,
   },
+  // Enable standalone output for Docker deployment
+  output: 'standalone',
 };
 
 export default nextConfig;

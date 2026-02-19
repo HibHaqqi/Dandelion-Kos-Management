@@ -195,7 +195,13 @@ const Sidebar = React.forwardRef<
 
     if (isMobile) {
       return (
-        <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
+        <Sheet
+          open={openMobile}
+          onOpenChange={(open) => {
+            setOpenMobile(open)
+          }}
+          {...props}
+        >
           <SheetContent
             data-sidebar="sidebar"
             data-mobile="true"
@@ -206,6 +212,12 @@ const Sidebar = React.forwardRef<
               } as React.CSSProperties
             }
             side={side}
+            onPointerDownOutside={(e) => {
+              setOpenMobile(false)
+            }}
+            onEscapeKeyDown={(e) => {
+              setOpenMobile(false)
+            }}
           >
             <SheetHeader className="sr-only">
               <SheetTitle>Navigation Menu</SheetTitle>

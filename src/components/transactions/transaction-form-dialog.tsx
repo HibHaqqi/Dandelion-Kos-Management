@@ -10,8 +10,8 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEffect, useTransition, useState } from "react";
-import { addTransaction, updateTransaction } from "@/app/transactions/actions";
-import { addCategory } from "@/app/categories/actions";
+import { addTransaction, updateTransaction } from "@/app/(dashboard)/transactions/actions";
+import { addCategory } from "@/app/(dashboard)/categories/actions";
 import { useToast } from "@/hooks/use-toast";
 import type { Room, Category } from "@/types";
 import type { Transaction } from "@/types";
@@ -129,7 +129,8 @@ export function TransactionFormDialog({ isOpen, onOpenChange, transaction, rooms
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      {isOpen && (
+        <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{transaction ? 'Edit Transaction' : 'Add New Transaction'}</DialogTitle>
           <DialogDescription>
@@ -313,6 +314,7 @@ export function TransactionFormDialog({ isOpen, onOpenChange, transaction, rooms
           </form>
         </Form>
       </DialogContent>
+      )}
     </Dialog>
   );
 }

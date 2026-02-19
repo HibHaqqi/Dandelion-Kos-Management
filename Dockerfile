@@ -1,58 +1,75 @@
-# Use the official Node.js 20 image.
-FROM node:20-slim
+# Production-ready Dockerfile for BizTrackKos-2
+FROM node:20-alpine AS builder
 
-# Install OpenSSL and PostgreSQL client tools
-RUN apt-get update -y && apt-get install -y openssl postgresql-client && rm -rf /var/lib/apt/lists/*
+# Install build dependencies
+RUN apk add --no-cache openssl postgresql-client curl
 
-# Set the working directory in the container.
 WORKDIR /app
 
-# Copy package.json and package-lock.json to the working directory.
-COPY package*.json ./
+# Copy package files FIRST (better layer caching)
+COPY package.json package-lock.json ./
 
-# Copy the prisma schema
-COPY prisma ./prisma
+# Configure npm for reliability
+ENV NODE_OPTIONS=--max-old-space-size=4096
+RUN npm config set fetch-retries 10 && \
+    npm config set fetch-timeout 120000
 
-# Install dependencies.
-RUN npm install
+# Install dependencies (cached if package.json unchanged)
+RUN npm cache clean --force && \
+    npm install --legacy-peer-deps --no-audit --no-fund --ignore-scripts || \
+    (echo "First attempt failed, retrying..." && \
+     npm cache clean --force && \
+     npm install --legacy-peer-deps --no-audit --no-fund --ignore-scripts)
 
-# Generate Prisma client
+# Copy ONLY prisma schema before other files (better caching)
+COPY prisma ./prisma/
+
+# Generate Prisma client (cached if schema unchanged)
 RUN npx prisma generate
 
-# Copy the rest of the application code to the working directory.
+# Copy application files LAST (this invalidates cache if any source changes)
 COPY . .
 
-# Build the Next.js application.
+# Build application (only runs if source files changed)
 RUN npm run build
 
-# Expose the port the app runs on.
+# Production stage
+FROM node:20-alpine AS production
+
+# Install runtime dependencies only
+RUN apk add --no-cache openssl postgresql-client curl dumb-init
+
+WORKDIR /app
+
+# Copy built application from builder
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/package.json ./package.json
+
+# Create necessary directories with correct ownership
+RUN mkdir -p /app/public/uploads && \
+    chown -R node:node /app/public/uploads
+
+# Startup script (must be done before switching to non-root user)
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Use non-root user for security
+USER node
+
+# Expose port
 EXPOSE 9002
 
-# Create a startup script
-COPY <<EOF /app/start.sh
-#!/bin/bash
-set -e
+# Environment variables
+ENV NODE_ENV=production \
+    PORT=9002 \
+    NODE_OPTIONS=--max-old-space-size=4096
 
-echo "Waiting for database to be ready..."
-until pg_isready -h db -p 5432 -U postgres 2>/dev/null; do
-  echo "Database is unavailable - sleeping"
-  sleep 2
-done
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:9002 || exit 1
 
-echo "Database is ready - ensuring schema is in sync..."
-echo "Running Prisma schema synchronization..."
-npx prisma db push --skip-generate || {
-  echo "Schema sync failed, retrying in 10 seconds..."
-  sleep 10
-  npx prisma db push --skip-generate
-}
-
-echo "Schema synchronized successfully!"
-echo "Starting application..."
-npm start
-EOF
-
-RUN chmod +x /app/start.sh
-
-# Define the command to start the app.
-CMD ["/app/start.sh"]
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["npm", "start"]

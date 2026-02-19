@@ -1,6 +1,7 @@
 export type Customer = {
   id: string;
   name: string;
+  email?: string;
   entryDate: string;
   phone: string;
   nik: string;
@@ -24,8 +25,12 @@ export type Transaction = {
   date: string;
   description: string;
   category?: string;
-  roomNumber?: string; 
+  roomNumber?: string;
   customerName?: string;
+  status?: string;
+  receiptUrl?: string | null;
+  isVerified?: boolean;
+  rejectionReason?: string | null;
 };
 
 export type Category = {
